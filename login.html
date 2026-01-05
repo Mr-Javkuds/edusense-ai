@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - EduSense AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+
+<body class="bg-slate-100 h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-96 border border-slate-200">
+        
+        <div class="text-center mb-8">
+            <div class="bg-indigo-600 text-white w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-indigo-200">
+                <i class="fa-solid fa-graduation-cap text-xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-800">EduSense AI</h1>
+            <p class="text-xs text-slate-500 uppercase tracking-widest font-semibold mt-1">Sistem Akademik Cerdas</p>
+        </div>
+
+        <form id="loginForm" class="space-y-5">
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Username / NIM / NPP</label>
+                <input type="text" id="username" class="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm" placeholder="Masukan ID Pengguna" required>
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
+                <input type="password" id="password" class="w-full border border-slate-300 p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition text-sm" placeholder="••••••••" required>
+            </div>
+            <button type="submit" id="btnLogin" class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-bold transition shadow-lg shadow-indigo-200 flex justify-center items-center gap-2">
+                <span>Masuk</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </form>
+
+   
+    </div>
+
+    <script>
+        document.getElementById('loginForm').onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // UI Loading State
+            const btn = document.getElementById('btnLogin');
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Memproses...';
+
+            const formData = new URLSearchParams();
+            formData.append('username', document.getElementById('username').value);
+            formData.append('password', document.getElementById('password').value);
+
+            try {
+                // Request Login
+                const res = await axios.post('/token', formData);
+                
+                // Simpan Token & Data User
+                localStorage.setItem('token', res.data.access_token);
+                localStorage.setItem('role', res.data.role);
+                localStorage.setItem('username', document.getElementById('username').value);
+
+                // Notifikasi Sukses
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Login Berhasil!',
+                    text: 'Mengalihkan ke dashboard...',
+                    timer: 1000,
+                    showConfirmButton: false
+                });
+
+                // --- ROUTING FIX (Sesuai Main.py) ---
+                if (res.data.role === 'kaprodi') {
+                    window.location.href = '/dashboard/kaprodi';
+                } else if (res.data.role === 'dosen') {
+                    window.location.href = '/dashboard/dosen';
+                } else if (res.data.role === 'mahasiswa') {
+                    window.location.href = '/dashboard/mahasiswa';
+                } else {
+                    Swal.fire('Error', 'Role user tidak dikenali sistem.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Gagal',
+                    text: 'Username atau Password salah. Silakan coba lagi.',
+                    confirmButtonColor: '#4f46e5'
+                });
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
+        };
+    </script>
+</body>
+</html>

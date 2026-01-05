@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense - Dashboard Mahasiswa</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 50%, #f0f9ff 100%);
+            min-height: 100vh;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(0.95);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1.15);
+                opacity: 0;
+            }
+        }
+
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: inherit;
+            background: inherit;
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .schedule-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .schedule-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -12px rgba(20, 184, 166, 0.25);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #99f6e4;
+            border-radius: 10px;
+        }
+
+        .status-badge {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-badge::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transform: translateY(-50%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        .modal-overlay {
+            backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .upload-zone {
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: #14b8a6;
+            background: linear-gradient(135deg, #ccfbf1 0%, #cffafe 100%);
+        }
+
+        .upload-zone.has-file {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
+        }
+    </style>
+</head>
+
+<body class="text-slate-800 min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- Navbar -->
+    <nav class="glass-card sticky top-0 z-50 border-b border-teal-100 shadow-sm">
+        <div class="container mx-auto px-4 md:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-200">
+                    <i class="fa-solid fa-user-graduate"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg text-slate-800 tracking-tight leading-none">EduSense</h1>
+                    <span class="text-[10px] font-bold text-teal-600 uppercase tracking-wider">Student Portal</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p id="navName" class="text-sm font-bold text-slate-700">Mahasiswa</p>
+                    <div class="flex items-center justify-end gap-1.5">
+                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                        <span class="text-[10px] text-slate-500 font-medium">Online</span>
+                    </div>
+                </div>
+                <button onclick="openUpdatePasswordModal()"
+                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-indigo-500 hover:border-indigo-200 hover:bg-indigo-50 transition shadow-sm"
+                    title="Ubah Password">
+                    <i class="fa-solid fa-key"></i>
+                </button>
+                <button onclick="logout()"
+                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition shadow-sm">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 md:px-8 py-8 max-w-6xl space-y-8 custom-scrollbar fade-in">
+
+        <!-- Hero Section -->
+        <div
+            class="bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-600 rounded-3xl p-8 text-white shadow-xl shadow-teal-200 relative overflow-hidden">
+            <div class="relative z-10">
+                <h2 class="text-2xl md:text-3xl font-bold mb-2">Selamat Datang, <span id="welcomeMsg">Mahasiswa</span>!
+                    👋</h2>
+                <p class="text-teal-100 text-sm md:text-base max-w-xl mb-6">Pantau jadwal kuliah dan status kehadiranmu
+                    di sini.</p>
+                <div class="flex flex-wrap gap-3">
+                    <div id="faceStatus"
+                        class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-medium border border-white/20 shadow-sm">
+                        <i class="fa-solid fa-spinner fa-spin text-teal-200"></i>
+                        <span>Mengecek status...</span>
+                    </div>
+
+                    <div
+                        class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-medium border border-white/20 shadow-sm">
+                        <i class="fa-solid fa-id-card text-teal-200"></i>
+                        <span>NIM: <span id="mhsNim" class="font-mono font-bold">-</span></span>
+                    </div>
+                    <div id="kelasInfo"
+                        class="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-medium border border-white/20 shadow-sm">
+                        <i class="fa-solid fa-users text-teal-200"></i>
+                        <span>Kelas: <span id="mhsKelas" class="font-mono font-bold">-</span></span>
+                    </div>
+                </div>
+            </div>
+            <i class="fa-solid fa-book-open absolute -right-8 -bottom-8 text-[12rem] text-white/10 rotate-12"></i>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="glass-card rounded-2xl p-5 border border-teal-100 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-emerald-600">
+                        <i class="fa-solid fa-check-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Hadir</p>
+                        <p id="statHadir" class="text-2xl font-bold text-emerald-600">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-5 border border-teal-100 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-100 to-yellow-100 flex items-center justify-center text-amber-600">
+                        <i class="fa-solid fa-clock text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Belum</p>
+                        <p id="statBelum" class="text-2xl font-bold text-amber-600">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-5 border border-teal-100 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-100 to-red-100 flex items-center justify-center text-orange-600">
+                        <i class="fa-solid fa-flag text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Laporan</p>
+                        <p id="statLaporan" class="text-2xl font-bold text-orange-600">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card rounded-2xl p-5 border border-teal-100 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center text-blue-600">
+                        <i class="fa-solid fa-calendar-days text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold tracking-wide">Jadwal</p>
+                        <p id="statJadwal" class="text-2xl font-bold text-blue-600">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            <!-- Jadwal Hari Ini -->
+            <div class="lg:col-span-3 glass-card rounded-2xl shadow-sm border border-teal-100 overflow-hidden">
+                <div
+                    class="p-5 border-b border-teal-50 flex justify-between items-center bg-gradient-to-r from-teal-50/50 to-transparent">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-check text-teal-600"></i> Semua Jadwal Kuliah
+                    </h3>
+                    <button onclick="loadJadwal()"
+                        class="text-xs font-bold text-teal-600 hover:bg-teal-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
+                </div>
+                <div id="jadwalContainer" class="p-5 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i>
+                        <p class="text-sm font-medium">Memuat jadwal...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Riwayat Absensi -->
+            <div class="lg:col-span-2 glass-card rounded-2xl shadow-sm border border-teal-100 overflow-hidden">
+                <div
+                    class="p-5 border-b border-teal-50 flex justify-between items-center bg-gradient-to-r from-teal-50/50 to-transparent">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-teal-600"></i> Riwayat Absensi
+                    </h3>
+                    <button onclick="loadHistory()"
+                        class="text-xs font-bold text-teal-600 hover:bg-teal-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Refresh
+                    </button>
+                </div>
+                <div id="historyContainer"
+                    class="divide-y divide-teal-50 max-h-[400px] overflow-y-auto custom-scrollbar">
+                    <div class="p-8 text-center text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p class="text-sm">Memuat riwayat...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-xs text-slate-400 border-t border-teal-100 bg-white/50">
+        <p>© 2026 EduSense AI. Platform Absensi Cerdas.</p>
+    </footer>
+
+    <!-- Modal Lapor -->
+    <div id="modalLapor"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] px-4 fade-in">
+        <div class="bg-white p-6 md:p-8 rounded-3xl shadow-2xl w-full max-w-md transform transition-all">
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <div
+                    class="w-16 h-16 bg-gradient-to-br from-orange-100 to-amber-100 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-lg shadow-orange-100">
+                    <i class="fa-solid fa-flag"></i>
+                </div>
+                <h3 class="font-bold text-xl text-slate-900">Lapor Kehadiran</h3>
+                <p class="text-xs text-slate-500 mt-1">Kirim bukti foto untuk ditinjau dosen</p>
+            </div>
+
+            <!-- Log Info -->
+            <div class="bg-gradient-to-r from-slate-50 to-teal-50 p-4 rounded-xl border border-slate-100 mb-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase font-bold">Mata Kuliah</p>
+                        <p id="mdlMatkul" class="font-bold text-slate-800 text-sm">-</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] text-slate-400 uppercase font-bold">Tanggal</p>
+                        <p id="mdlTanggal" class="font-mono text-xs text-slate-600">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Photo -->
+            <div class="mb-5">
+                <label class="block text-xs font-bold text-slate-600 mb-2">
+                    <i class="fa-solid fa-camera text-teal-500 mr-1"></i> Bukti Foto Kehadiran
+                </label>
+                <label id="uploadZone"
+                    class="upload-zone block border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer transition">
+                    <input type="file" id="fotoInput" accept="image/*" capture="environment" class="hidden"
+                        onchange="handleFotoUpload(this)">
+                    <div id="uploadPlaceholder">
+                        <div
+                            class="w-12 h-12 bg-white text-teal-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-600">Tap untuk ambil foto</p>
+                        <p class="text-xs text-slate-400 mt-1">atau upload dari galeri</p>
+                    </div>
+                    <div id="uploadPreview" class="hidden">
+                        <img id="previewImg" src="" alt="Preview" class="max-h-40 mx-auto rounded-lg shadow-md mb-2">
+                        <p id="previewFilename" class="text-xs font-bold text-emerald-600 truncate"></p>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Alasan -->
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-slate-600 mb-2">
+                    <i class="fa-solid fa-pen text-teal-500 mr-1"></i> Alasan Laporan
+                </label>
+                <textarea id="alasanInput" rows="3"
+                    placeholder="Contoh: Saya hadir tapi tidak terdeteksi oleh sistem AI..."
+                    class="w-full p-4 border border-slate-200 rounded-xl text-sm bg-white outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition resize-none"></textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeModalLapor()"
+                    class="py-3.5 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition">
+                    Batal
+                </button>
+                <button onclick="submitLaporan()" id="btnSubmitLapor"
+                    class="py-3.5 rounded-xl text-sm font-bold bg-gradient-to-r from-teal-600 to-cyan-600 text-white hover:from-teal-700 hover:to-cyan-700 shadow-lg shadow-teal-200 transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane"></i> Kirim Laporan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH CHECK ---
+        const token = localStorage.getItem('token');
+        if (!token || localStorage.getItem('role') !== 'mahasiswa') window.location.href = '/login.html';
+
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        const username = localStorage.getItem('username');
+        const fullname = localStorage.getItem('fullname') || username;
+
+        // Set UI
+        document.getElementById('navName').innerText = fullname;
+        document.getElementById('mhsNim').innerText = username;
+        document.getElementById('welcomeMsg').innerText = fullname;
+
+        // Init
+        checkFaceStatus();
+        loadJadwal();
+        loadHistory();
+
+        // --- FACE STATUS ---
+        async function checkFaceStatus() {
+            try {
+                const res = await axios.get('/users/');
+                const isRegistered = res.data.some(u => u.nim === username);
+                const el = document.getElementById('faceStatus');
+
+                if (isRegistered) {
+                    el.className = "inline-flex items-center gap-2 bg-emerald-500/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-bold border border-emerald-400/30 shadow-sm";
+                    el.innerHTML = '<i class="fa-solid fa-check-circle text-emerald-200"></i> <span class="text-emerald-100">Wajah Terdaftar</span>';
+                } else {
+                    el.className = "inline-flex items-center gap-2 bg-red-500/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-bold border border-red-400/30 shadow-sm animate-pulse";
+                    el.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-red-200"></i> <span class="text-red-100">Belum Daftar Wajah</span>';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // --- JADWAL DENGAN STATUS ---
+        async function loadJadwal() {
+            const container = document.getElementById('jadwalContainer');
+            container.innerHTML = '<div class="text-center py-12 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3"></i><p class="text-sm font-medium">Memuat jadwal...</p></div>';
+
+            try {
+                const res = await axios.get('/mhs/jadwal');
+                const jadwalList = res.data;
+
+                // Get today's attendance status
+                let attendanceMap = {};
+                try {
+                    const attRes = await axios.get('/mhs/history');
+                    const today = new Date().toDateString();
+                    attRes.data.forEach(log => {
+                        const logDate = new Date(log.waktu_absen).toDateString();
+                        if (logDate === today && log.jadwal_id) {
+                            // Determine status based on metode and is_disputed
+                            let status = 'HADIR';
+                            if (log.is_disputed) {
+                                status = 'LAPOR';
+                            } else if (log.metode === 'ALPHA_SYSTEM') {
+                                status = 'ALPHA';
+                            }
+
+                            attendanceMap[log.jadwal_id] = {
+                                status: status,
+                                metode: log.metode,
+                                log_id: log.log_id
+                            };
+                        }
+                    });
+                } catch (e) { console.error('Failed to get attendance:', e); }
+
+                // Update stats
+                const today = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][new Date().getDay()];
+                const todaySchedules = jadwalList.filter(j => j.hari === today);
+                const hadirCount = Object.values(attendanceMap).filter(a => a.status === 'HADIR').length;
+                const laporCount = Object.values(attendanceMap).filter(a => a.status === 'LAPOR').length;
+                const alphaCount = Object.values(attendanceMap).filter(a => a.status === 'ALPHA').length;
+
+                document.getElementById('statJadwal').innerText = jadwalList.length;
+                document.getElementById('statHadir').innerText = hadirCount;
+                document.getElementById('statBelum').innerText = Math.max(0, todaySchedules.length - hadirCount - laporCount - alphaCount);
+                document.getElementById('statLaporan').innerText = laporCount + alphaCount; // ALPHA juga dapat melapor
+
+                // Populate hero section class badge
+                if (jadwalList.length > 0 && jadwalList[0].student_class_name) {
+                    document.getElementById('mhsKelas').innerText = jadwalList[0].student_class_name;
+                } else {
+                    document.getElementById('mhsKelas').innerText = 'Belum Terdaftar';
+                }
+
+                if (jadwalList.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+                                <i class="fa-solid fa-calendar-xmark text-2xl"></i>
+                            </div>
+                            <p class="text-slate-500 font-medium">Tidak ada jadwal kuliah.</p>
+                        </div>`;
+                    return;
+                }
+
+                // Group jadwal berdasarkan hari
+                const daysOrder = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                const groupedSchedule = {};
+                daysOrder.forEach(day => { groupedSchedule[day] = []; });
+                
+                jadwalList.forEach(j => {
+                    if (groupedSchedule[j.hari]) {
+                        groupedSchedule[j.hari].push(j);
+                    }
+                });
+
+                container.innerHTML = '';
+
+                // Render per hari
+                daysOrder.forEach(day => {
+                    const daySchedule = groupedSchedule[day];
+                    if (daySchedule.length > 0) {
+                        const isToday = day === today;
+                        
+                        // Day header
+                        container.innerHTML += `
+                            <div class="flex items-center gap-2 mb-3 mt-4 first:mt-0">
+                                <div class="${isToday ? 'bg-teal-600 text-white' : 'bg-slate-200 text-slate-600'} px-3 py-1 rounded-lg text-xs font-bold">
+                                    ${day} ${isToday ? '(Hari Ini)' : ''}
+                                </div>
+                                <div class="flex-1 h-px bg-slate-200"></div>
+                            </div>
+                        `;
+                        
+                        daySchedule.forEach(j => {
+                            const att = attendanceMap[j.jadwal_id];
+
+                            if (isToday) {
+                                // JADWAL HARI INI - AKTIF
+                                let statusBadge = '';
+                                let statusClass = '';
+
+                                if (att) {
+                                    if (att.status === 'HADIR') {
+                                        statusBadge = `<span class="status-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                                            <i class="fa-solid fa-check-circle"></i> HADIR
+                                        </span>`;
+                                        statusClass = 'border-emerald-200 bg-emerald-50/50';
+                                    } else if (att.status === 'ALPHA') {
+                                        statusBadge = `<span class="status-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                                            <i class="fa-solid fa-times-circle"></i> ALPHA
+                                        </span>`;
+                                        statusClass = 'border-red-200 bg-red-50/50';
+                                    } else {
+                                        statusBadge = `<span class="status-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200 animate-pulse">
+                                            <i class="fa-solid fa-clock"></i> DITINJAU
+                                        </span>`;
+                                        statusClass = 'border-orange-200 bg-orange-50/50';
+                                    }
+                                } else {
+                                    statusBadge = `<span class="status-badge inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                                        <i class="fa-solid fa-hourglass-half"></i> BELUM ABSEN
+                                    </span>`;
+                                    statusClass = 'border-amber-200 bg-amber-50/30';
+                                }
+
+                                container.innerHTML += `
+                                    <div class="schedule-card rounded-2xl p-5 border ${statusClass} ring-2 ring-teal-200 relative overflow-hidden mb-4">
+                                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                            <div class="flex items-start gap-4">
+                                                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex flex-col items-center justify-center text-white shadow-lg shadow-teal-200 flex-shrink-0">
+                                                    <span class="text-[10px] font-bold uppercase">${j.hari.substring(0, 3)}</span>
+                                                    <span class="text-[10px] font-bold leading-none">${j.jam_mulai || (j.jam ? j.jam.split('-')[0] : '-')}</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-800 mb-1">${j.matkul ? j.matkul.split('(')[0].trim() : '-'}</h4>
+                                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                                        <span><i class="fa-solid fa-chalkboard-user text-teal-500 mr-1"></i>${j.dosen || '-'}</span>
+                                                        <span><i class="fa-solid fa-location-dot text-teal-500 mr-1"></i>${j.ruang || (j.matkul && j.matkul.includes('(') ? j.matkul.split('(')[1]?.replace(')', '') : '-')}</span>
+                                                        <span><i class="fa-regular fa-clock text-teal-500 mr-1"></i>${j.jam || `${j.jam_mulai}-${j.jam_selesai}`}</span>
+                                                    </div>
+                                                    ${j.student_class_name ? `<div class="mt-2"><span class="inline-flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-1 rounded text-[10px] font-bold border border-purple-200"><i class="fa-solid fa-users"></i> ${j.student_class_name}</span></div>` : ''}
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 ml-auto">
+                                                ${statusBadge}
+                                            </div>
+                                        </div>
+                                        <div class="absolute top-0 right-0 w-2 h-full bg-gradient-to-b from-teal-400 to-cyan-500 rounded-r-2xl"></div>
+                                    </div>`;
+                            } else {
+                                // JADWAL HARI LAIN - DISABLED (ABU-ABU)
+                                container.innerHTML += `
+                                    <div class="rounded-2xl p-5 border border-slate-200 bg-slate-50 relative overflow-hidden mb-4 opacity-60">
+                                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                            <div class="flex items-start gap-4">
+                                                <div class="w-14 h-14 rounded-xl bg-slate-200 flex flex-col items-center justify-center text-slate-400 flex-shrink-0">
+                                                    <span class="text-[10px] font-bold uppercase">${j.hari.substring(0, 3)}</span>
+                                                    <span class="text-[10px] font-bold leading-none">${j.jam_mulai || (j.jam ? j.jam.split('-')[0] : '-')}</span>
+                                                </div>
+                                                <div>
+                                                    <h4 class="font-bold text-slate-400 mb-1">${j.matkul ? j.matkul.split('(')[0].trim() : '-'}</h4>
+                                                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
+                                                        <span><i class="fa-solid fa-chalkboard-user text-slate-300 mr-1"></i>${j.dosen || '-'}</span>
+                                                        <span><i class="fa-solid fa-location-dot text-slate-300 mr-1"></i>${j.ruang || (j.matkul && j.matkul.includes('(') ? j.matkul.split('(')[1]?.replace(')', '') : '-')}</span>
+                                                        <span><i class="fa-regular fa-clock text-slate-300 mr-1"></i>${j.jam || `${j.jam_mulai}-${j.jam_selesai}`}</span>
+                                                    </div>
+                                                   
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-2 ml-auto">
+                                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold bg-slate-200 text-slate-500 border border-slate-300">
+                                                    <i class="fa-solid fa-lock"></i> Belum Aktif
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                            }
+                        });
+                    }
+                });
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="text-center py-12 text-red-400"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i><p class="text-sm">Gagal memuat jadwal</p></div>';
+            }
+        }
+
+        // --- HISTORY ---
+        let currentReportLog = null;
+
+        async function loadHistory() {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i><p class="text-sm">Memuat riwayat...</p></div>';
+
+            try {
+                const res = await axios.get('/mhs/history');
+
+                if (res.data.length === 0) {
+                    container.innerHTML = `
+                        <div class="p-8 text-center">
+                            <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
+                                <i class="fa-solid fa-inbox text-xl"></i>
+                            </div>
+                            <p class="text-slate-500 text-sm font-medium">Belum ada riwayat absensi</p>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+
+                res.data.forEach(log => {
+                    const date = new Date(log.waktu_absen);
+                    const dateStr = date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                    const timeStr = date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                    // Status & Method badge
+                    let metodeBadge = '';
+                    let isAlpha = log.metode === 'ALPHA_SYSTEM';
+
+                    if (log.metode === 'AI_VIDEO') {
+                        metodeBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-600 border border-indigo-200"><i class="fa-solid fa-robot"></i> AI</span>';
+                    } else if (log.metode === 'ALPHA_SYSTEM') {
+                        metodeBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-600 border border-red-200"><i class="fa-solid fa-times-circle"></i> ALPHA</span>';
+                    } else if (log.metode === 'MANUAL_DOSEN') {
+                        metodeBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-600 border border-emerald-200"><i class="fa-solid fa-hand"></i> Manual</span>';
+                    } else {
+                        metodeBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200"><i class="fa-solid fa-check"></i> Hadir</span>';
+                    }
+
+                    // Action button - ALPHA and HADIR can report, LAPOR shows "Ditinjau"
+                    let actionBtn = '';
+                    if (log.is_disputed) {
+                        actionBtn = `<span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-orange-100 text-orange-600 border border-orange-200">
+                            <i class="fa-solid fa-hourglass-half"></i> Ditinjau
+                        </span>`;
+                    } else if (isAlpha) {
+                        // ALPHA can report to dispute their absence
+                        actionBtn = `<button onclick='openModalLapor(${JSON.stringify(log)})' class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-red-500 text-white border border-red-500 hover:bg-red-600 transition shadow-sm">
+                            <i class="fa-solid fa-flag"></i> Sengketa
+                        </button>`;
+                    } else {
+                        actionBtn = `<button onclick='openModalLapor(${JSON.stringify(log)})' class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-white text-red-500 border border-red-200 hover:bg-red-50 transition">
+                            <i class="fa-solid fa-flag"></i> Lapor
+                        </button>`;
+                    }
+
+                    // Build mata kuliah display
+                    const matkulName = log.matkul || 'Mata Kuliah';
+                    const roomInfo = log.ruang ? `<i class="fa-solid fa-location-dot text-teal-500"></i> ${log.ruang}` : '';
+                    const scheduleInfo = log.hari ? `<i class="fa-regular fa-clock text-teal-500"></i> ${log.hari}, ${log.jam || '-'}` : '';
+
+                    container.innerHTML += `
+                        <div class="p-4 hover:bg-teal-50/50 transition border-b border-teal-50 last:border-b-0">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3 min-w-0 flex-grow">
+                                    <div class="w-12 h-10 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 flex flex-col items-center justify-center flex-shrink-0">
+                                        <span class="text-[10px] font-bold text-teal-700 uppercase">${dateStr.split(' ')[1]}</span>
+                                        <span class="text-[8px] font-bold text-teal-800 leading-none">${dateStr.split(' ')[0]}</span>
+                                    </div>
+                                    <div class="min-w-0 flex-grow">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            ${metodeBadge}
+                                            <span class="text-[10px] text-slate-400 font-medium">${timeStr}</span>
+                                        </div>
+                                        <p class="text-sm font-bold text-slate-800 truncate mb-1">${matkulName}</p>
+                                        <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-slate-500">
+                                            ${roomInfo ? `<span>${roomInfo}</span>` : ''}
+                                            ${scheduleInfo ? `<span>${scheduleInfo}</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0 mt-1">
+                                    ${actionBtn}
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = '<div class="p-8 text-center text-red-400"><i class="fa-solid fa-triangle-exclamation text-xl mb-2"></i><p class="text-sm">Gagal memuat</p></div>';
+            }
+        }
+
+        // --- MODAL LAPOR ---
+        function openModalLapor(log) {
+            currentReportLog = log;
+
+            // Set modal info
+            document.getElementById('mdlMatkul').innerText = `Jadwal ID: ${log.jadwal_id || '-'}`;
+            document.getElementById('mdlTanggal').innerText = new Date(log.waktu_absen).toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            // Reset form
+            document.getElementById('fotoInput').value = '';
+            document.getElementById('alasanInput').value = '';
+            document.getElementById('uploadPlaceholder').classList.remove('hidden');
+            document.getElementById('uploadPreview').classList.add('hidden');
+            document.getElementById('uploadZone').classList.remove('has-file');
+
+            // Show modal
+            document.getElementById('modalLapor').classList.remove('hidden');
+        }
+
+        function closeModalLapor() {
+            document.getElementById('modalLapor').classList.add('hidden');
+            currentReportLog = null;
+        }
+
+        function handleFotoUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('previewFilename').innerText = file.name;
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                    document.getElementById('uploadPreview').classList.remove('hidden');
+                    document.getElementById('uploadZone').classList.add('has-file');
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function submitLaporan() {
+            if (!currentReportLog) return;
+
+            const alasan = document.getElementById('alasanInput').value.trim();
+            const fotoFile = document.getElementById('fotoInput').files[0];
+
+            if (!alasan) {
+                return Swal.fire({ icon: 'warning', title: 'Lengkapi Data', text: 'Mohon isi alasan laporan.', confirmButtonColor: '#14b8a6' });
+            }
+
+            const btn = document.getElementById('btnSubmitLapor');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+
+            try {
+                const fd = new FormData();
+                fd.append('log_id', currentReportLog.log_id);
+                fd.append('alasan', alasan);
+                if (fotoFile) {
+                    fd.append('foto', fotoFile);
+                }
+
+                await axios.post('/mhs/report', fd, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                closeModalLapor();
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Laporan Terkirim!',
+                    text: 'Laporan Anda sedang ditinjau oleh dosen.',
+                    confirmButtonColor: '#14b8a6',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                loadHistory();
+                loadJadwal();
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat mengirim laporan.', confirmButtonColor: '#14b8a6' });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Laporan';
+            }
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('modalLapor').addEventListener('click', function (e) {
+            if (e.target === this) closeModalLapor();
+        });
+
+        // --- LOGOUT ---
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        // --- UPDATE PASSWORD ---
+        function openUpdatePasswordModal() {
+            document.getElementById('modalUpdatePassword').classList.remove('hidden');
+            document.getElementById('formUpdatePassword').reset();
+        }
+
+        async function updatePassword(e) {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword.length < 6) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Password baru minimal 6 karakter' });
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Konfirmasi password tidak cocok' });
+                return;
+            }
+
+            try {
+                Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+                
+                await axios.post('/user/update-password', {
+                    old_password: oldPassword,
+                    new_password: newPassword
+                }, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Password berhasil diperbarui',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                document.getElementById('modalUpdatePassword').classList.add('hidden');
+                document.getElementById('formUpdatePassword').reset();
+            } catch (error) {
+                let errorMsg = 'Gagal memperbarui password';
+                if (error.response?.data?.detail) {
+                    errorMsg = error.response.data.detail;
+                }
+                Swal.fire({ icon: 'error', title: 'Error', text: errorMsg });
+            }
+        }
+    </script>
+
+    <!-- Modal Update Password -->
+    <div id="modalUpdatePassword" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <button onclick="document.getElementById('modalUpdatePassword').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-key text-2xl text-teal-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Ubah Password</h2>
+                <p class="text-sm text-slate-500">Masukkan password lama dan password baru Anda</p>
+            </div>
+
+            <form id="formUpdatePassword" onsubmit="updatePassword(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Password Lama</label>
+                    <input type="password" id="oldPassword" required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Password Baru</label>
+                    <input type="password" id="newPassword" required minlength="6"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                    <p class="text-xs text-slate-500 mt-1">Minimal 6 karakter</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Konfirmasi Password Baru</label>
+                    <input type="password" id="confirmPassword" required minlength="6"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-teal-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> Update Password
+                </button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>

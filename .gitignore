@@ -1,0 +1,146 @@
+# EduSense AI - Git Ignore Configuration
+# ========================================
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Database Files
+*.db
+*.sqlite
+*.sqlite3
+edusense.db
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary Files
+temp_videos/
+temp_*/
+tmp/
+*.tmp
+
+# Results & Reports
+hasil_crop/
+laporan_excel/
+*.csv
+*.xlsx
+
+# Uploaded Files
+a114109/
+*.zip
+
+# OS Files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Sensitive Data
+*_results.csv
+*_student.csv
+video_siswa.mp4
+
+# Development & Testing Files
+# ========================================
+
+# Helper Scripts (Seeders, Testers, Utilities)
+helpers/*_seeder.py
+helpers/test_*.py
+helpers/reset_*.py
+helpers/create_*.py
+helpers/database_mahasiswa.csv
+helpers/bulk_registration_results.csv
+helpers/a114109_student.csv
+helpers/temp_*.py
+helpers/temp_*.html
+helpers/temp_*.js
+helpers/run_migration*.py
+
+# Migrations Folder (database migration scripts & utilities)
+migrations/
+
+# Bulk operations results
+helpers/*_results.csv
+helpers/*_student.csv

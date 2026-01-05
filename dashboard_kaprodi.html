@@ -1,0 +1,2399 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSense AI - Admin Panel</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            /* Slate-50 */
+        }
+
+        /* Custom Scrollbar yang lebih tipis */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Navigation Active State */
+        .nav-item.active {
+            background-color: #eff6ff;
+            /* Blue-50 */
+            color: #4f46e5;
+            /* Indigo-600 */
+            border-right: 3px solid #4f46e5;
+        }
+
+        /* Table Styling */
+        .table-row-hover:hover {
+            background-color: #f8fafc;
+        }
+
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+
+<body class="text-slate-600 h-screen flex overflow-hidden selection:bg-indigo-100 selection:text-indigo-700">
+
+    <aside class="w-64 bg-white border-r border-slate-200 flex-shrink-0 flex flex-col z-20">
+        <div class="h-16 flex items-center px-6 border-b border-slate-100 gap-3">
+            <div
+                class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white shadow-md shadow-indigo-200">
+                <i class="fa-solid fa-shield-halved text-xs"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base text-slate-800 tracking-tight">EduSense AI</h1>
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Admin Portal</span>
+            </div>
+        </div>
+
+        <nav class="flex-grow p-4 space-y-1 overflow-y-auto">
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase mb-2 mt-2">Main Menu</p>
+
+            <button onclick="switchView('dashboard')" id="nav-dashboard"
+                class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                <i class="fa-solid fa-chart-pie w-5 text-center"></i> Monitoring
+            </button>
+
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase mb-2 mt-6">Data Master</p>
+
+            <button onclick="switchView('dosen')" id="nav-dosen"
+                class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                <i class="fa-solid fa-chalkboard-user w-5 text-center"></i> Dosen
+            </button>
+            <button onclick="switchView('mahasiswa')" id="nav-mahasiswa"
+                class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                <i class="fa-solid fa-user-graduate w-5 text-center"></i> Mahasiswa
+            </button>
+            <button onclick="switchView('matkul')" id="nav-matkul"
+                class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                <i class="fa-solid fa-book w-5 text-center"></i> Mata Kuliah
+            </button>
+
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase mb-2 mt-6">Perkuliahan</p>
+
+            <button onclick="switchView('jadwal')" id="nav-jadwal"
+                class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                <i class="fa-solid fa-calendar-days w-5 text-center"></i> Jadwal
+            </button>
+            <button onclick="switchView('enrollment')" id="nav-enrollment"
+                class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition-all">
+                <i class="fa-solid fa-user-check w-5 text-center"></i> Enrollment
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100">
+            <div class="flex items-center gap-3 mb-3 px-1">
+                <img src="https://ui-avatars.com/api/?name=Kaprodi&background=4f46e5&color=fff"
+                    class="w-8 h-8 rounded-full shadow-sm">
+                <div class="overflow-hidden">
+                    <p class="text-xs font-bold text-slate-700 truncate">Administrator</p>
+                    <p class="text-[10px] text-slate-400">Kaprodi TI</p>
+                </div>
+            </div>
+            <button onclick="openUpdatePasswordModal()"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition border border-indigo-100 mb-2">
+                <i class="fa-solid fa-key"></i> Ubah Password
+            </button>
+            <button onclick="logout()"
+                class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition border border-red-100">
+                <i class="fa-solid fa-power-off"></i> Keluar
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-grow flex flex-col h-screen overflow-hidden relative">
+        <div class="flex-grow overflow-y-auto p-6 md:p-8">
+            <div class="max-w-7xl mx-auto space-y-6">
+
+                <div id="view-dashboard" class="fade-in space-y-6">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-800">Dashboard</h2>
+                            <p class="text-slate-500 text-sm mt-1">Ringkasan aktivitas sistem EduSense.</p>
+                        </div>
+                        <span
+                            class="bg-white px-3 py-1.5 rounded-full border border-slate-200 text-xs font-medium text-slate-500 shadow-sm flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> <span
+                                id="clockDisplay">...</span>
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-chalkboard-user"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Dosen</p>
+                                <p class="text-xl font-bold text-slate-800 leading-none mt-0.5" id="countDosen">-</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-teal-50 text-teal-600 rounded-lg flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-user-graduate"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Mahasiswa</p>
+                                <p class="text-xl font-bold text-slate-800 leading-none mt-0.5" id="countMhs">-</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-book"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Matkul</p>
+                                <p class="text-xl font-bold text-slate-800 leading-none mt-0.5" id="countMatkul">-</p>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-video"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Video</p>
+                                <p class="text-xl font-bold text-slate-800 leading-none mt-0.5" id="countVideo">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div
+                            class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                            <h3 class="font-bold text-slate-700 text-sm">Log Upload Video</h3>
+                            <button onclick="loadHistory()"
+                                class="text-xs font-semibold text-slate-500 hover:text-indigo-600 transition">
+                                <i class="fa-solid fa-rotate mr-1"></i> Refresh
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead
+                                    class="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold tracking-wider">
+                                    <tr>
+                                        <th class="px-5 py-3">Waktu</th>
+                                        <th class="px-5 py-3">Dosen</th>
+                                        <th class="px-5 py-3">File</th>
+                                        <th class="px-5 py-3 text-center">Status</th>
+                                        <th class="px-5 py-3 text-right">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTable" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-dosen" class="hidden fade-in grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-4">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 sticky top-6">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-circle-plus text-indigo-600"></i> Tambah Dosen
+                            </h3>
+                            <form onsubmit="addDosen(event)" class="space-y-3">
+                                <input type="text" id="dosenUser"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    placeholder="Username / NPP" required>
+                                <input type="password" id="dosenPass"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    placeholder="Password" required>
+                                <input type="text" id="dosenName"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    placeholder="Nama Lengkap" required>
+                                <button type="submit"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-semibold transition shadow-sm">Simpan
+                                    Data</button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-8">
+                        <div
+                            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]">
+                            <div
+                                class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-700 text-sm">Daftar Dosen</h3>
+                            </div>
+                            <div class="flex-grow overflow-y-auto p-4">
+                                <ul id="listDosen" class="space-y-2"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-mahasiswa" class="hidden fade-in grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-4 space-y-4">
+                        <!-- Single Registration Form -->
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-id-card text-teal-600"></i> Registrasi Akun Mahasiswa
+                            </h3>
+                            <form onsubmit="registerMhs(event)" class="space-y-3">
+                                <input type="text" id="mhsNim"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono focus:ring-2 focus:ring-teal-500 outline-none"
+                                    placeholder="NIM (A11.xxxx)" required>
+                                <input type="password" id="mhsPassword"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                                    placeholder="Password" required>
+                                <label
+                                    class="block border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:bg-slate-50 hover:border-teal-400 transition cursor-pointer">
+                                    <input type="file" id="mhsFoto" accept="image/*" class="hidden" required
+                                        onchange="previewImg(this)">
+                                    <i class="fa-solid fa-camera text-slate-400 mb-1"></i>
+                                    <p class="text-xs text-slate-500" id="fotoLabel">Upload Foto Wajah</p>
+                                </label>
+                                <button type="submit"
+                                    class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-sm font-semibold transition shadow-sm">Simpan
+                                    & Vectorize</button>
+                            </form>
+                        </div>
+
+                        <!-- Bulk Registration Form -->
+                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 p-5 rounded-xl shadow-sm border-2 border-indigo-200">
+                            <h3 class="font-bold text-indigo-800 mb-2 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-users text-indigo-600"></i> Bulk Registration (ZIP)
+                            </h3>
+                            <p class="text-xs text-slate-600 mb-4">Upload ZIP berisi foto mahasiswa (100+ foto sekaligus)</p>
+                            <form onsubmit="bulkRegisterMhs(event)" class="space-y-3">
+                                <label
+                                    class="block border-2 border-dashed border-indigo-300 bg-white rounded-lg p-4 text-center hover:bg-indigo-50 hover:border-indigo-500 transition cursor-pointer">
+                                    <input type="file" id="bulkZipFile" accept=".zip" class="hidden" required
+                                        onchange="previewZipFile(this)">
+                                    <i class="fa-solid fa-file-zipper text-indigo-400 text-2xl mb-2"></i>
+                                    <p class="text-xs text-slate-700 font-semibold" id="zipLabel">Pilih File ZIP</p>
+                                    <p class="text-[10px] text-slate-500 mt-1">Max 500MB</p>
+                                </label>
+                                <div class="bg-white rounded-lg p-3 text-xs space-y-1 text-slate-600">
+                                    <p class="font-semibold text-slate-700">📝 Format Nama File:</p>
+                                    <p><code class="bg-slate-100 px-1 rounded">A11.2025.16442.jpg</code></p>
+                                    <p><code class="bg-slate-100 px-1 rounded">123456789.png</code></p>
+                                    <p class="text-[10px] text-slate-500 mt-2">✅ 1 wajah per foto | ❌ Multiple faces = ditolak</p>
+                                </div>
+                                <button type="submit" id="bulkUploadBtn"
+                                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-2.5 rounded-lg text-sm font-bold transition shadow-md">
+                                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i>Upload & Process
+                                </button>
+                            </form>
+                            <div id="bulkProgress" class="hidden mt-3">
+                                <div class="bg-white rounded-lg p-3">
+                                    <p class="text-xs font-semibold text-slate-700 mb-2">Processing...</p>
+                                    <div class="w-full bg-slate-200 rounded-full h-2">
+                                        <div id="bulkProgressBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                    </div>
+                                    <p id="bulkProgressText" class="text-[10px] text-slate-500 mt-1">Uploading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-8">
+                        <div
+                            class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[600px]">
+                            <div
+                                class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-700 text-sm">Database Akun Mahasiswa</h3>
+                                <button onclick="loadMahasiswa()"
+                                    class="text-xs font-semibold text-slate-500 hover:text-teal-600"><i
+                                        class="fa-solid fa-rotate"></i></button>
+                            </div>
+                            <div class="flex-grow overflow-y-auto p-4 bg-slate-50">
+                                <ul id="listMahasiswa" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-matkul" class="hidden fade-in space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm">Tambah Mata Kuliah</h3>
+                            <form onsubmit="addMatkul(event)" class="space-y-3">
+                                <input type="text" id="namaMatkul"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                                    placeholder="Nama Mata Kuliah" required>
+                                <input type="text" id="kodeRuang"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none"
+                                    placeholder="Kode Ruang (D.2.x)" required>
+                                <button type="submit"
+                                    class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-lg text-sm font-semibold transition shadow-sm">Simpan</button>
+                            </form>
+                        </div>
+                        <div
+                            class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
+                            <div
+                                class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-700 text-sm">Daftar Mata Kuliah</h3>
+                                <button onclick="loadKelasList()"
+                                    class="text-xs font-semibold text-slate-500 hover:text-purple-600"><i
+                                        class="fa-solid fa-rotate"></i></button>
+                            </div>
+                            <div class="flex-grow overflow-y-auto p-4">
+                                <div id="listKelas" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-jadwal" class="hidden fade-in space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-fit">
+                            <h3 class="font-bold text-slate-800 mb-4 text-sm">Set Jadwal</h3>
+                            <form onsubmit="addJadwal(event)" class="space-y-3">
+                                <select id="selDosen"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    required></select>
+                                <select id="selKelas"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    required></select>
+                                <select id="selStudentClass"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <option value="">Pilih Kelas Mahasiswa (Optional)</option>
+                                </select>
+                                <select id="hari"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                    <option>Senin</option>
+                                    <option>Selasa</option>
+                                    <option>Rabu</option>
+                                    <option>Kamis</option>
+                                    <option>Jumat</option>
+                                </select>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <input type="time" id="jamMulai"
+                                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        required>
+                                    <input type="time" id="jamSelesai"
+                                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        required>
+                                </div>
+                                <button type="submit"
+                                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg text-sm font-semibold transition shadow-sm">Simpan
+                                    Jadwal</button>
+                            </form>
+                        </div>
+                        <div
+                            class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-[500px]">
+                            <div
+                                class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-700 text-sm">Daftar Jadwal</h3>
+                                <button onclick="loadJadwalList()"
+                                    class="text-xs font-semibold text-slate-500 hover:text-indigo-600"><i
+                                        class="fa-solid fa-rotate"></i></button>
+                            </div>
+                            <div class="flex-grow overflow-y-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead
+                                        class="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold sticky top-0">
+                                        <tr>
+                                            <th class="px-5 py-3">Jadwal</th>
+                                            <th class="px-5 py-3">Matkul</th>
+                                            <th class="px-5 py-3">Kelas</th>
+                                            <th class="px-5 py-3">Dosen</th>
+                                            <th class="px-5 py-3 text-right">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tableJadwal" class="divide-y divide-slate-100"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="view-enrollment" class="hidden fade-in space-y-6">
+                    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div
+                            class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                            <span class="text-xs text-slate-500 font-bold uppercase">Total</span>
+                            <span class="text-lg font-bold text-slate-800" id="countEnrollments">-</span>
+                        </div>
+                       
+                        <div
+                            class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                            <span class="text-xs text-slate-500 font-bold uppercase">Kelas Aktif</span>
+                            <span class="text-lg font-bold text-slate-800" id="countActiveClasses">-</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div
+                            class="border-b border-slate-200 px-5 pt-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                            <nav class="flex gap-6 -mb-px">
+                                <button onclick="switchEnrollmentTab('studentclass')" id="tabStudentClass"
+                                    class="pb-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition">Kelas</button>
+                                <button onclick="switchEnrollmentTab('enrollment')" id="tabEnrollment"
+                                    class="pb-3 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">Pendaftaran</button>
+                            </nav>
+
+                            <div class="pb-3 flex gap-2">
+                                <select id="filterKelas" onchange="loadEnrollments()"
+                                    class="hidden md:block px-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-slate-50 focus:ring-1 focus:ring-indigo-500 outline-none">
+                                    <option value="">Semua Kelas</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="p-0">
+                            <div id="contentStudentClass" class="tab-content">
+                                <div class="p-3 bg-slate-50/50 border-b border-slate-100 flex justify-end">
+                                    <button onclick="openModalAddStudentClass()"
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                                        <i class="fa-solid fa-plus mr-1"></i> Buat Kelas
+                                    </button>
+                                </div>
+                                <div class="overflow-x-auto h-[450px]">
+                                    <table class="w-full text-sm text-left">
+                                        <thead
+                                            class="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold sticky top-0 z-10">
+                                            <tr>
+                                                <th class="px-5 py-3">Nama Kelas</th>
+                                                <th class="px-5 py-3">Mahasiswa</th>
+                                                <th class="px-5 py-3">Dibuat</th>
+                                                <th class="px-5 py-3 text-right">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableStudentClass" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div id="contentEnrollment" class="tab-content hidden">
+                                <div
+                                    class="p-3 bg-slate-50/50 border-b border-slate-100 flex gap-2 justify-end flex-wrap">
+                                    <button onclick="openModalAddEnrollment()"
+                                        class="bg-white border border-slate-200 text-slate-600 hover:border-indigo-500 hover:text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold transition">
+                                        <i class="fa-solid fa-user-plus mr-1"></i> Manual
+                                    </button>
+                                    <button onclick="openModalBulkEnrollment()"
+                                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
+                                        <i class="fa-solid fa-users mr-1"></i> Bulk Enroll
+                                    </button>
+                                   
+                                </div>
+                                <div class="overflow-x-auto h-[450px]">
+                                    <table class="w-full text-sm text-left">
+                                        <thead
+                                            class="bg-slate-50 text-slate-500 text-[10px] uppercase font-bold sticky top-0 z-10">
+                                            <tr>
+                                                <th class="px-5 py-3">NIM</th>
+                                                <th class="px-5 py-3">Nama</th>
+                                                <th class="px-5 py-3">Kelas</th>
+                                                <th class="px-5 py-3">Tgl Enroll</th>
+                                                <th class="px-5 py-3 text-right">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableEnrollments" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <div id="modalEditDosen"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h3 class="font-bold text-lg text-slate-800 mb-4">Edit Dosen</h3>
+            <input type="hidden" id="editDosenId">
+            <div class="space-y-3 mb-6">
+                <input type="text" id="editDosenName"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="password" id="editDosenPass"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                    placeholder="Password Baru (Opsional)">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('modalEditDosen').classList.add('hidden')"
+                    class="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                <button onclick="deleteDosen()"
+                    class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg text-sm font-semibold"><i
+                        class="fa-solid fa-trash"></i></button>
+                <button onclick="updateDosen()"
+                    class="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditMatkul"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h3 class="font-bold text-lg text-slate-800 mb-4">Edit Matkul</h3>
+            <input type="hidden" id="editMatkulId">
+            <div class="space-y-3 mb-6">
+                <input type="text" id="editMatkulNama"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                <input type="text" id="editMatkulRuang"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closeModalMatkul()"
+                    class="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                <button onclick="deleteMatkul()"
+                    class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg text-sm font-semibold"><i
+                        class="fa-solid fa-trash"></i></button>
+                <button onclick="updateMatkul()"
+                    class="flex-1 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditJadwal"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h3 class="font-bold text-lg text-slate-800 mb-4">Edit Jadwal</h3>
+            <input type="hidden" id="editJadwalId">
+            <div class="space-y-3 mb-6">
+                <select id="editJadwalDosen"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"></select>
+                <select id="editJadwalKelas"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"></select>
+                <select id="editJadwalStudentClass"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                    <option value="">Pilih Kelas Mahasiswa (Optional)</option>
+                </select>
+                <select id="editJadwalHari"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white">
+                    <option>Senin</option>
+                    <option>Selasa</option>
+                    <option>Rabu</option>
+                    <option>Kamis</option>
+                    <option>Jumat</option>
+                </select>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="time" id="editJadwalMulai"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                    <input type="time" id="editJadwalSelesai"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="closeModalJadwal()"
+                    class="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                <button onclick="deleteJadwal()"
+                    class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-lg text-sm font-semibold"><i
+                        class="fa-solid fa-trash"></i></button>
+                <button onclick="updateJadwal()"
+                    class="flex-1 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Student Class -->
+    <div id="modalEditStudentClass"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h3 class="font-bold text-lg text-slate-800 mb-3">Edit Kelas</h3>
+                <input type="hidden" id="editClassId">
+                <div class="mb-3">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Nama Kelas</label>
+                    <input type="text" id="editClassName"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <!-- Tabs -->
+                <div class="flex border-b border-slate-200">
+                    <button type="button" onclick="switchEditClassTab('enrolled')" id="editTabEnrolled"
+                        class="flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition">
+                        <i class="fa-solid fa-users mr-1"></i> Mahasiswa Terdaftar (<span id="editClassStudentCount">0</span>)
+                    </button>
+                    <button type="button" onclick="switchEditClassTab('add')" id="editTabAdd"
+                        class="flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition">
+                        <i class="fa-solid fa-user-plus mr-1"></i> Tambah Mahasiswa
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab Content: Enrolled Students -->
+            <div id="editContentEnrolled" class="flex-1 overflow-y-auto p-6">
+                <div id="editClassStudentList" class="space-y-2"></div>
+                <p id="editNoStudents" class="text-center text-slate-400 text-sm py-8 hidden">
+                    <i class="fa-solid fa-inbox text-2xl mb-2 block"></i>
+                    Belum ada mahasiswa terdaftar
+                </p>
+            </div>
+
+            <!-- Tab Content: Add Students -->
+            <div id="editContentAdd" class="flex-1 overflow-y-auto p-6 hidden">
+                <div class="mb-4">
+                    <div class="flex border-b border-slate-200 mb-4">
+                        <button type="button" onclick="switchEditAddMethod('select')" id="editAddTabSelect"
+                            class="flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600">
+                            <i class="fa-solid fa-hand-pointer mr-1"></i> Pilih Mahasiswa
+                        </button>
+                        <button type="button" onclick="switchEditAddMethod('bulk')" id="editAddTabBulk"
+                            class="flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400">
+                            <i class="fa-solid fa-list mr-1"></i> Input Bulk NIM
+                        </button>
+                    </div>
+
+                    <!-- Select method -->
+                    <div id="editAddFormSelect">
+                        <div class="mb-3">
+                            <input type="text" id="editSearchStudent" placeholder="Cari NIM atau nama..."
+                                class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                oninput="filterAvailableStudents()">
+                        </div>
+                        <div id="editAvailableStudentsList" class="max-h-64 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
+                            <p class="text-center text-slate-400 text-xs py-4">Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Bulk method -->
+                    <div id="editAddFormBulk" class="hidden">
+                        <label class="block text-xs font-bold text-slate-600 uppercase mb-2">Daftar NIM (satu per baris)</label>
+                        <textarea id="editBulkNims" rows="8"
+                            class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono mb-2 focus:ring-2 focus:ring-indigo-500 outline-none"
+                            placeholder="A11.2025.16117&#10;A11.2025.16118&#10;A11.2025.16119"></textarea>
+                        <button type="button" onclick="bulkAddStudentsToClass()"
+                            class="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-sm">
+                            <i class="fa-solid fa-users-line mr-1"></i> Tambah Semua
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-slate-200 flex gap-2 justify-between">
+                <button onclick="deleteStudentClassFromEdit()"
+                    class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg text-sm font-semibold">
+                    <i class="fa-solid fa-trash mr-1"></i> Hapus Kelas
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="closeModalEditStudentClass()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Tutup</button>
+                    <button onclick="saveClassNameOnly()"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">
+                        <i class="fa-solid fa-save mr-1"></i> Simpan Perubahan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalEditMhs"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-xs text-center">
+            <div
+                class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="font-bold text-lg text-slate-800" id="mhsTargetName">Hapus Data?</h3>
+            <p class="text-xs text-slate-500 mb-6">Data wajah akan hilang permanen.</p>
+            <input type="hidden" id="deleteMhsNim">
+            <div class="flex gap-2 justify-center">
+                <button onclick="document.getElementById('modalEditMhs').classList.add('hidden')"
+                    class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold">Batal</button>
+                <button onclick="deleteMahasiswa()"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Modal: Create Class + Enroll Students -->
+    <div id="modalAddStudentClass"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl">
+            <!-- Header with stepper -->
+            <div class="px-6 py-4 border-b border-slate-200">
+                <h3 class="font-bold text-lg text-slate-800 mb-3">Buat Kelas & Tambah Mahasiswa</h3>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-1">
+                        <div id="step1Indicator"
+                            class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+                            1</div>
+                        <span id="step1Label" class="text-sm font-semibold text-indigo-600">Nama Kelas</span>
+                    </div>
+                    <div class="w-12 h-0.5 bg-slate-200" id="stepConnector"></div>
+                    <div class="flex items-center gap-2 flex-1">
+                        <div id="step2Indicator"
+                            class="w-8 h-8 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold">
+                            2</div>
+                        <span id="step2Label" class="text-sm font-medium text-slate-400">Isi Mahasiswa</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Class Name -->
+            <div id="wizardStep1" class="p-6">
+                <div class="mb-6">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Nama Kelas Mahasiswa</label>
+                    <input type="text" id="wizardClassName" required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                        placeholder="Contoh: A11.4109">
+                    <p class="text-xs text-slate-500 mt-1.5">Format: A11.4109, A11.4110, dst.</p>
+                </div>
+                <div class="flex gap-2 justify-end">
+                    <button type="button" onclick="closeModalAddStudentClass()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                    <button type="button" onclick="goToWizardStep2()"
+                        class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">Lanjut
+                        <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+            </div>
+
+            <!-- Step 2: Add Students -->
+            <div id="wizardStep2" class="p-6 hidden">
+                <div class="mb-4">
+                    <p class="text-sm text-slate-600 mb-3">Kelas: <strong id="wizardClassNamePreview"
+                            class="text-indigo-600"></strong></p>
+
+                    <!-- Enrollment method tabs -->
+                    <div class="flex border-b border-slate-200 mb-4">
+                        <button type="button" onclick="switchWizardEnrollTab('manual')" id="wizardTabManual"
+                            class="flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600">
+                            <i class="fa-solid fa-keyboard mr-1"></i> Input Manual
+                        </button>
+                        <button type="button" onclick="switchWizardEnrollTab('excel')" id="wizardTabExcel"
+                            class="flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400">
+                            <i class="fa-solid fa-file-excel mr-1"></i> Upload Excel
+                        </button>
+                    </div>
+
+                    <!-- Manual input -->
+                    <div id="wizardFormManual">
+                        <div class="mb-3 flex justify-between items-center">
+                            <label class="text-xs font-bold text-slate-600 uppercase">Pilih Mahasiswa</label>
+                            <button type="button" onclick="toggleSelectAllWizard()" 
+                                class="text-xs text-indigo-600 font-semibold hover:underline">
+                                <i class="fa-solid fa-check-double mr-1"></i> <span id="selectAllLabel">Pilih Semua</span>
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="wizardSearchStudent" placeholder="Cari NIM atau nama..."
+                                class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                                oninput="filterWizardStudents()">
+                        </div>
+                        <div id="wizardStudentChecklistContainer" 
+                            class="max-h-72 overflow-y-auto border border-slate-200 rounded-lg p-3 bg-slate-50">
+                            <p class="text-center text-slate-400 text-sm py-4">Loading mahasiswa...</p>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">
+                            <i class="fa-solid fa-info-circle mr-1"></i>
+                            <span id="wizardSelectedCount">0</span> mahasiswa dipilih
+                        </p>
+                    </div>
+
+                    <!-- Excel upload -->
+                    <div id="wizardFormExcel" class="hidden">
+                        <label
+                            class="flex flex-col items-center justify-center w-full h-40 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer hover:bg-indigo-50 hover:border-indigo-400 transition mb-2">
+                            <i class="fa-solid fa-cloud-upload text-3xl text-slate-400 mb-2"></i>
+                            <span class="text-sm font-medium text-slate-600 mb-1" id="wizardExcelLabel">Klik untuk
+                                upload Excel</span>
+                            <span class="text-xs text-slate-400">File .xlsx atau .xls</span>
+                            <input id="wizardExcelFile" type="file" class="hidden" accept=".xlsx,.xls"
+                                onchange="previewWizardExcel(this)">
+                        </label>
+                        <a href="#" onclick="downloadTemplateExcel(event)"
+                            class="text-xs text-indigo-600 font-bold hover:underline block text-center">
+                            <i class="fa-solid fa-download mr-1"></i> Download Template Excel
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 justify-between mt-6">
+                    <button type="button" onclick="goToWizardStep1()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="skipStudentsAndCreate()"
+                            class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-sm font-semibold">
+                            Lewati (Buat Kelas Kosong)
+                        </button>
+                        <button type="button" onclick="createClassWithStudents()"
+                            class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold shadow-lg shadow-indigo-200">
+                            <i class="fa-solid fa-check mr-1"></i> Buat & Enroll
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalAddEnrollment"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h3 class="font-bold text-lg text-slate-800 mb-4">Enroll Manual</h3>
+            <form onsubmit="createEnrollment(event)" class="space-y-3">
+                <select id="enrollmentNim"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"></select>
+                <select id="enrollmentStudentClass"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"></select>
+                <div class="flex gap-2 justify-end mt-4">
+                    <button type="button" onclick="closeModalAddEnrollment()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalBulkEnrollment"
+        class="hidden fixed inset-0 modal-overlay flex items-center justify-center z-[60] fade-in px-4">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md">
+            <h3 class="font-bold text-lg text-slate-800 mb-4">Bulk Enroll</h3>
+            <div class="mb-4">
+                <select id="bulkEnrollmentStudentClass"
+                    class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white mb-4"></select>
+                <div class="flex border-b border-slate-200 mb-4">
+                    <button type="button" onclick="switchBulkTab('manual')" id="tabManual"
+                        class="flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600">Manual</button>
+                    <button type="button" onclick="switchBulkTab('excel')" id="tabExcel"
+                        class="flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400">Excel</button>
+                </div>
+
+                <form id="formManualBulk" onsubmit="bulkEnrollManual(event)">
+                    <textarea id="bulkEnrollmentNims" rows="5"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm font-mono mb-4"
+                        placeholder="NIM per baris..."></textarea>
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" onclick="closeModalBulkEnrollment()"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold">Proses</button>
+                    </div>
+                </form>
+
+                <form id="formExcelBulk" onsubmit="bulkEnrollExcel(event)" class="hidden">
+                    <label
+                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer hover:bg-indigo-50 transition mb-2">
+                        <i class="fa-solid fa-cloud-upload text-2xl text-slate-400 mb-2"></i>
+                        <span class="text-sm font-medium text-slate-600" id="excelFileLabel">Klik Upload Excel</span>
+                        <input id="bulkEnrollmentFile" type="file" class="hidden" accept=".xlsx,.xls"
+                            onchange="previewExcelFile(this)">
+                    </label>
+                    <a href="#" onclick="downloadTemplateExcel(event)"
+                        class="text-xs text-indigo-600 font-bold hover:underline mb-4 block text-center">Download
+                        Template</a>
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" onclick="closeModalBulkEnrollment()"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-semibold">Batal</button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold">Upload</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden">
+        <span id="countEnrollments"></span><span id="countUnenrolled"></span>
+        <select id="bulkEnrollmentKelas"></select>
+        <select id="bulkEnrollmentKelasExcel"></select>
+    </div>
+
+    <script>
+        // AUTH
+        const token = localStorage.getItem('token');
+        if (!token || localStorage.getItem('role') !== 'kaprodi') window.location.href = '/login.html';
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        // INIT
+        setInterval(() => {
+            const el = document.getElementById('clockDisplay');
+            if (el) el.innerText = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }, 1000);
+
+        loadHistory(); loadDosenList(); loadMahasiswa(); loadKelasList(); loadJadwalList(); loadStudentClassesForJadwal();
+
+        function switchView(viewName) {
+            ['dashboard', 'dosen', 'mahasiswa', 'matkul', 'jadwal', 'enrollment'].forEach(v => {
+                document.getElementById('view-' + v)?.classList.add('hidden');
+                document.getElementById('nav-' + v)?.classList.remove('active');
+            });
+            document.getElementById('view-' + viewName)?.classList.remove('hidden');
+            document.getElementById('nav-' + viewName)?.classList.add('active');
+
+            if (viewName === 'enrollment') {
+                switchEnrollmentTab('studentclass');
+                loadStudentClasses();
+            }
+            
+            if (viewName === 'jadwal') {
+                loadStudentClassesForJadwal();
+                loadJadwalList();
+            }
+        }
+
+        function previewImg(input) {
+            if (input.files[0]) document.getElementById('fotoLabel').innerText = input.files[0].name;
+        }
+
+        // --- MONITORING ---
+        async function loadHistory() {
+            try {
+                const res = await axios.get('/history/tasks');
+                const t = document.getElementById('historyTable');
+                if (!t) return;
+                t.innerHTML = "";
+                document.getElementById('countVideo').innerText = res.data.length;
+
+                if (res.data.length === 0) {
+                    t.innerHTML = '<tr><td colspan="5" class="p-6 text-center text-slate-400 italic text-xs">Belum ada aktivitas.</td></tr>';
+                    return;
+                }
+
+                res.data.forEach(task => {
+                    const btn = task.status === 'completed' ? `<button onclick="dlExcel('${task.task_id}')" class="text-[10px] text-green-600 border border-green-200 bg-green-50 px-2 py-1 rounded hover:bg-green-100 font-bold"><i class="fa-solid fa-download mr-1"></i>XLS</button>` : '-';
+                    const statusBadge = task.status === 'completed'
+                        ? '<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold">SUKSES</span>'
+                        : '<span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-[10px] font-bold animate-pulse">PROSES</span>';
+
+                    t.innerHTML += `
+                    <tr class="table-row-hover transition border-b border-slate-50 last:border-0">
+                        <td class="px-5 py-3 text-slate-500 font-mono text-xs">${new Date(task.created_at).toLocaleDateString()}</td>
+                        <td class="px-5 py-3 font-semibold text-slate-700">${task.dosen_name || task.dosen_username}</td>
+                        <td class="px-5 py-3 text-slate-500 truncate max-w-[150px]">${task.filename}</td>
+                        <td class="px-5 py-3 text-center">${statusBadge}</td>
+                        <td class="px-5 py-3 text-right">${btn}</td>
+                    </tr>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function dlExcel(tid) {
+            const res = await axios.get(`/download_excel/${tid}`, { responseType: 'blob' });
+            const a = document.createElement('a'); a.href = window.URL.createObjectURL(new Blob([res.data])); a.download = `Laporan_${tid}.xlsx`; a.click();
+        }
+
+        // --- DOSEN CRUD ---
+        async function loadDosenList() {
+            const res = await axios.get('/admin/dosen');
+            const l = document.getElementById('listDosen');
+            const s = document.getElementById('selDosen');
+            const es = document.getElementById('editJadwalDosen');
+
+            if (l) l.innerHTML = "";
+            if (s) s.innerHTML = "<option value=''>Pilih Dosen</option>";
+            if (es) es.innerHTML = "<option value=''>Pilih Dosen</option>";
+
+            document.getElementById('countDosen').innerText = res.data.length;
+
+            res.data.forEach(d => {
+                if (l) l.innerHTML += `
+                <li onclick="openEditDosen('${d.username}', '${d.full_name}')" class="cursor-pointer p-3 bg-white border border-slate-100 rounded-lg flex justify-between items-center group hover:border-indigo-300 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">${d.full_name.charAt(0)}</div>
+                        <div>
+                            <p class="font-bold text-slate-700 text-sm group-hover:text-indigo-600">${d.full_name}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">${d.username}</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-pen-to-square text-slate-300 group-hover:text-indigo-500 text-sm"></i>
+                </li>`;
+                if (s) s.innerHTML += `<option value="${d.username}">${d.full_name}</option>`;
+                if (es) es.innerHTML += `<option value="${d.username}">${d.full_name}</option>`;
+            });
+        }
+
+        async function addDosen(e) {
+            e.preventDefault();
+            await axios.post('/admin/dosen', {
+                username: document.getElementById('dosenUser').value,
+                password: document.getElementById('dosenPass').value,
+                full_name: document.getElementById('dosenName').value
+            });
+            Swal.fire({ icon: 'success', title: 'Tersimpan', timer: 1500, showConfirmButton: false });
+            e.target.reset(); loadDosenList();
+        }
+
+        function openEditDosen(username, fullname) {
+            document.getElementById('editDosenId').value = username;
+            document.getElementById('editDosenName').value = fullname;
+            document.getElementById('editDosenPass').value = "";
+            document.getElementById('modalEditDosen').classList.remove('hidden');
+        }
+
+        async function updateDosen() {
+            const username = document.getElementById('editDosenId').value;
+            const fullName = document.getElementById('editDosenName').value;
+            const password = document.getElementById('editDosenPass').value;
+
+            if (!fullName || fullName.length < 3) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Nama lengkap minimal 3 karakter' });
+                return;
+            }
+
+            try {
+                Swal.fire({ title: 'Menyimpan...', didOpen: () => Swal.showLoading() });
+
+                const payload = {
+                    full_name: fullName
+                };
+
+                // Tambahkan password ke payload jika diisi
+                if (password && password.length > 0) {
+                    if (password.length < 6) {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'Password minimal 6 karakter' });
+                        return;
+                    }
+                    payload.password = password;
+                }
+
+                await axios.put(`/admin/dosen/${username}`, payload);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data dosen berhasil diperbarui',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                document.getElementById('modalEditDosen').classList.add('hidden');
+                loadDosenList();
+            } catch (error) {
+                let errorMsg = 'Gagal memperbarui data dosen';
+                if (error.response?.data?.detail) {
+                    errorMsg = error.response.data.detail;
+                }
+                Swal.fire({ icon: 'error', title: 'Error', text: errorMsg });
+            }
+        }
+
+        async function deleteDosen() {
+            const username = document.getElementById('editDosenId').value;
+            const result = await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
+            if (result.isConfirmed) {
+                try {
+                    await axios.delete(`/admin/dosen/${username}`);
+                    Swal.fire({ icon: 'success', title: 'Terhapus', timer: 1000, showConfirmButton: false });
+                    document.getElementById('modalEditDosen').classList.add('hidden');
+                    loadDosenList();
+                } catch (e) { Swal.fire('Error', 'Gagal menghapus', 'error'); }
+            }
+        }
+
+        // --- MAHASISWA CRUD ---
+        async function loadMahasiswa() {
+            const res = await axios.get('/users/');
+            const l = document.getElementById('listMahasiswa');
+            if (!l) return;
+            l.innerHTML = "";
+            document.getElementById('countMhs').innerText = res.data.length;
+
+            res.data.forEach(m => {
+                l.innerHTML += `
+                <li onclick="openEditMhs('${m.nim}')" class="cursor-pointer p-2 bg-white border border-slate-200 rounded-lg flex items-center gap-3 group hover:border-teal-400 transition">
+                    <div class="w-8 h-8 rounded-md bg-teal-50 text-teal-600 flex items-center justify-center text-xs font-bold"><i class="fa-solid fa-user"></i></div>
+                    <div class="flex-grow">
+                        <p class="font-bold text-xs text-slate-700 font-mono">${m.nim}</p>
+                        <p class="text-[10px] text-green-600 font-bold"><i class="fa-solid fa-check"></i> Vector Ready</p>
+                    </div>
+                </li>`;
+            });
+        }
+
+        async function registerMhs(e) {
+            e.preventDefault();
+            const fd = new FormData();
+            fd.append('nim', document.getElementById('mhsNim').value);
+            fd.append('password', document.getElementById('mhsPassword').value);
+            fd.append('file', document.getElementById('mhsFoto').files[0]);
+
+            Swal.fire({ title: 'Memproses AI...', didOpen: () => Swal.showLoading() });
+            try {
+                await axios.post('/register/', fd);
+                Swal.fire({ icon: 'success', title: 'Berhasil', timer: 1500, showConfirmButton: false });
+                e.target.reset(); document.getElementById('fotoLabel').innerText = "Upload Foto Wajah";
+                loadMahasiswa();
+            } catch (e) { Swal.fire('Gagal', 'Wajah tidak terdeteksi.', 'error'); }
+        }
+
+        // --- BULK FACE REGISTRATION ---
+        function previewZipFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                document.getElementById('zipLabel').innerText = `${file.name} (${sizeMB} MB)`;
+            }
+        }
+
+        async function bulkRegisterMhs(e) {
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('bulkZipFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                Swal.fire('Error', 'Pilih file ZIP terlebih dahulu', 'error');
+                return;
+            }
+            
+            // Validation
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                Swal.fire('Error', 'File harus berformat .ZIP', 'error');
+                return;
+            }
+            
+            const sizeMB = file.size / 1024 / 1024;
+            if (sizeMB > 500) {
+                Swal.fire('Error', 'File terlalu besar (max 500MB)', 'error');
+                return;
+            }
+            
+            // Show progress
+            document.getElementById('bulkProgress').classList.remove('hidden');
+            document.getElementById('bulkUploadBtn').disabled = true;
+            document.getElementById('bulkProgressText').innerText = 'Uploading ZIP file...';
+            document.getElementById('bulkProgressBar').style.width = '30%';
+            
+            const fd = new FormData();
+            fd.append('file', file);
+            
+            try {
+                // Upload and process
+                document.getElementById('bulkProgressText').innerText = 'Processing faces (this may take several minutes)...';
+                document.getElementById('bulkProgressBar').style.width = '60%';
+                
+                const res = await axios.post('/admin/mahasiswa/bulk-face-registration', fd, {
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    timeout: 600000 // 10 minutes timeout
+                });
+                
+                document.getElementById('bulkProgressBar').style.width = '100%';
+                document.getElementById('bulkProgressText').innerText = 'Complete!';
+                
+                // Show detailed results
+                const summary = res.data;
+                
+                // Create detailed HTML report
+                let resultsHTML = `
+                    <div class="text-left space-y-3">
+                        <div class="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-200">
+                            <p class="text-sm font-bold text-green-800">✅ Success: ${summary.success_count}</p>
+                        </div>
+                        <div class="bg-gradient-to-r from-red-50 to-pink-50 p-4 rounded-lg border border-red-200">
+                            <p class="text-sm font-bold text-red-800">❌ Failed: ${summary.failed_count}</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                            <p class="text-sm font-bold text-slate-700">📊 Total: ${summary.total_processed} files</p>
+                            <p class="text-xs text-slate-500">⏱️ Time: ${summary.processing_time_seconds}s</p>
+                        </div>
+                `;
+                
+                // Show failed items if any
+                if (summary.failed_count > 0) {
+                    resultsHTML += `
+                        <div class="max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-lg">
+                            <table class="w-full text-xs">
+                                <thead class="bg-slate-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-3 py-2 text-left font-semibold text-slate-700">NIM</th>
+                                        <th class="px-3 py-2 text-left font-semibold text-slate-700">Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                    `;
+                    
+                    summary.results.filter(r => r.status === 'failed').forEach(item => {
+                        resultsHTML += `
+                            <tr>
+                                <td class="px-3 py-2 font-mono text-slate-600">${item.nim}</td>
+                                <td class="px-3 py-2 text-red-600">${item.error_reason}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    resultsHTML += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                resultsHTML += `</div>`;
+                
+                // Show SweetAlert with results
+                await Swal.fire({
+                    title: '📊 Bulk Registration Complete',
+                    html: resultsHTML,
+                    icon: summary.failed_count === 0 ? 'success' : 'info',
+                    width: '600px',
+                    confirmButtonText: 'OK'
+                });
+                
+                // Reset form
+                e.target.reset();
+                document.getElementById('zipLabel').innerText = 'Pilih File ZIP';
+                loadMahasiswa();
+                
+            } catch (error) {
+                console.error('Bulk registration error:', error);
+                const errorMsg = error.response?.data?.detail || error.message || 'Unknown error';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Processing Failed',
+                    text: errorMsg,
+                    footer: 'Check console for details'
+                });
+            } finally {
+                // Hide progress and re-enable button
+                setTimeout(() => {
+                    document.getElementById('bulkProgress').classList.add('hidden');
+                    document.getElementById('bulkUploadBtn').disabled = false;
+                    document.getElementById('bulkProgressBar').style.width = '0%';
+                }, 2000);
+            }
+        }
+
+        function openEditMhs(nim) {
+            document.getElementById('mhsTargetName').innerText = "Hapus " + nim + "?";
+            document.getElementById('deleteMhsNim').value = nim;
+            document.getElementById('modalEditMhs').classList.remove('hidden');
+        }
+
+        async function deleteMahasiswa() {
+            const nim = document.getElementById('deleteMhsNim').value;
+            try {
+                await axios.delete(`/admin/mahasiswa/${nim}`);
+                Swal.fire({ icon: 'success', title: 'Terhapus', timer: 1000, showConfirmButton: false });
+                document.getElementById('modalEditMhs').classList.add('hidden');
+                loadMahasiswa();
+            } catch (e) { Swal.fire('Error', 'Gagal menghapus.', 'error'); }
+        }
+
+        // --- MATKUL CRUD ---
+        async function loadKelasList() {
+            const res = await axios.get('/admin/kelas');
+            const l = document.getElementById('listKelas');
+            const s = document.getElementById('selKelas');
+            const es = document.getElementById('editJadwalKelas');
+
+            if (l) l.innerHTML = "";
+            if (s) s.innerHTML = "<option value=''>Pilih Matkul</option>";
+            if (es) es.innerHTML = "<option value=''>Pilih Matkul</option>";
+
+            document.getElementById('countMatkul').innerText = res.data.length;
+
+            res.data.forEach(k => {
+                if (l) l.innerHTML += `
+                <div onclick="openEditMatkul(${k.kelas_id}, '${k.nama_matkul}', '${k.kode_ruang}')" class="cursor-pointer p-3 bg-white rounded-lg border border-slate-200 flex justify-between items-center group hover:border-purple-400">
+                    <div>
+                        <p class="font-bold text-slate-800 text-xs group-hover:text-purple-600">${k.nama_matkul}</p>
+                        <span class="text-[10px] font-mono bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100">${k.kode_ruang}</span>
+                    </div>
+                    <i class="fa-solid fa-pen text-slate-300 text-xs"></i>
+                </div>`;
+                if (s) s.innerHTML += `<option value="${k.kelas_id}">${k.nama_matkul} (${k.kode_ruang})</option>`;
+                if (es) es.innerHTML += `<option value="${k.kelas_id}">${k.nama_matkul} (${k.kode_ruang})</option>`;
+            });
+        }
+
+        async function addMatkul(e) {
+            e.preventDefault();
+            await axios.post('/admin/kelas', {
+                nama_matkul: document.getElementById('namaMatkul').value,
+                kode_ruang: document.getElementById('kodeRuang').value
+            });
+            Swal.fire({ icon: 'success', title: 'Tersimpan', timer: 1000, showConfirmButton: false });
+            e.target.reset(); loadKelasList();
+        }
+
+        function openEditMatkul(id, nama, ruang) {
+            document.getElementById('editMatkulId').value = id;
+            document.getElementById('editMatkulNama').value = nama;
+            document.getElementById('editMatkulRuang').value = ruang;
+            document.getElementById('modalEditMatkul').classList.remove('hidden');
+        }
+        function closeModalMatkul() { document.getElementById('modalEditMatkul').classList.add('hidden'); }
+
+        async function updateMatkul() {
+            const id = document.getElementById('editMatkulId').value;
+            try {
+                await axios.put(`/admin/kelas/${id}`, {
+                    nama_matkul: document.getElementById('editMatkulNama').value,
+                    kode_ruang: document.getElementById('editMatkulRuang').value
+                });
+                Swal.fire({ icon: 'success', title: 'Update', timer: 1000, showConfirmButton: false });
+                closeModalMatkul(); loadKelasList();
+            } catch (e) { Swal.fire('Error', 'Gagal', 'error'); }
+        }
+
+        async function deleteMatkul() {
+            const id = document.getElementById('editMatkulId').value;
+            const result = await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444' });
+            if (result.isConfirmed) {
+                try {
+                    await axios.delete(`/admin/kelas/${id}`);
+                    Swal.fire({ icon: 'success', timer: 1000, showConfirmButton: false });
+                    closeModalMatkul(); loadKelasList();
+                } catch (e) { Swal.fire('Error', 'Gagal', 'error'); }
+            }
+        }
+
+        async function loadStudentClassesForJadwal() {
+            try {
+                const res = await axios.get('/admin/student-class');
+                const s = document.getElementById('selStudentClass');
+                if (s) {
+                    s.innerHTML = "<option value=''>Pilih Kelas Mahasiswa (Optional)</option>";
+                    res.data.forEach(c => {
+                        s.innerHTML += `<option value="${c.class_id}">${c.class_name}</option>`;
+                    });
+                }
+                console.log('Loaded', res.data.length, 'student classes for jadwal dropdown');
+            } catch (e) {
+                console.error('Failed to load student classes:', e);
+            }
+        }
+
+        // --- JADWAL CRUD ---
+        async function loadJadwalList() {
+            const res = await axios.get('/admin/jadwal');
+            const t = document.getElementById('tableJadwal');
+            if (!t) return;
+            t.innerHTML = "";
+
+            res.data.forEach(j => {
+                const studentClassBadge = j.student_class_name 
+                    ? `<span class="inline-flex items-center gap-1 bg-teal-50 text-teal-700 px-2 py-1 rounded text-[10px] font-bold border border-teal-200"><i class="fa-solid fa-users"></i> ${j.student_class_name}</span>` 
+                    : '<span class="text-xs text-slate-300 italic">-</span>';
+                t.innerHTML += `
+                <tr class="table-row-hover border-b border-slate-50 last:border-0">
+                    <td class="px-5 py-3"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-[10px] font-bold uppercase">${j.hari}, ${j.jam}</span></td>
+                    <td class="px-5 py-3">
+                        <div class="text-sm font-bold text-indigo-600">${j.matkul}</div>
+                    </td>
+                    <td class="px-5 py-3">${studentClassBadge}</td>
+                    <td class="px-5 py-3 text-xs text-slate-500">${j.dosen}</td>
+                    <td class="px-5 py-3 text-right">
+                        <button onclick="openEditJadwal(${j.jadwal_id}, '${j.dosen_username}', ${j.kelas_id}, '${j.hari}', '${j.jam_mulai}', '${j.jam_selesai}', ${j.student_class_id || 'null'})" class="text-xs text-slate-400 hover:text-indigo-600"><i class="fa-solid fa-pen"></i></button>
+                    </td>
+                </tr>`;
+            });
+        }
+
+        async function addJadwal(e) {
+            e.preventDefault();
+            const studentClassId = document.getElementById('selStudentClass').value;
+            const payload = {
+                dosen_username: document.getElementById('selDosen').value,
+                kelas_id: document.getElementById('selKelas').value,
+                hari: document.getElementById('hari').value,
+                jam_mulai: document.getElementById('jamMulai').value,
+                jam_selesai: document.getElementById('jamSelesai').value
+            };
+            
+            // Only include student_class_id if selected
+            if (studentClassId) {
+                payload.student_class_id = parseInt(studentClassId);
+            }
+            
+            await axios.post('/admin/jadwal', payload);
+            Swal.fire({ icon: 'success', title: 'Tersimpan', timer: 1000, showConfirmButton: false });
+            e.target.reset();
+            loadJadwalList();
+        }
+
+        async function openEditJadwal(id, dosen, kelas, hari, mulai, selesai, studentClassId = null) {
+            document.getElementById('editJadwalId').value = id;
+            document.getElementById('editJadwalDosen').value = dosen;
+            document.getElementById('editJadwalKelas').value = kelas;
+            document.getElementById('editJadwalHari').value = hari;
+            document.getElementById('editJadwalMulai').value = mulai;
+            document.getElementById('editJadwalSelesai').value = selesai;
+            
+            // Load student classes for edit dropdown
+            try {
+                const res = await axios.get('/admin/student-class');
+                const select = document.getElementById('editJadwalStudentClass');
+                select.innerHTML = "<option value=''>Pilih Kelas Mahasiswa (Optional)</option>";
+                res.data.forEach(c => {
+                    select.innerHTML += `<option value="${c.class_id}">${c.class_name}</option>`;
+                });
+                if (studentClassId) {
+                    select.value = studentClassId;
+                }
+            } catch (e) {
+                console.error('Failed to load student classes:', e);
+            }
+            
+            document.getElementById('modalEditJadwal').classList.remove('hidden');
+        }
+        function closeModalJadwal() { document.getElementById('modalEditJadwal').classList.add('hidden'); }
+
+        async function updateJadwal() {
+            const id = document.getElementById('editJadwalId').value;
+            const studentClassId = document.getElementById('editJadwalStudentClass').value;
+            
+            const payload = {
+                dosen_username: document.getElementById('editJadwalDosen').value,
+                kelas_id: parseInt(document.getElementById('editJadwalKelas').value),
+                student_class_id: studentClassId ? parseInt(studentClassId) : null,
+                hari: document.getElementById('editJadwalHari').value,
+                jam_mulai: document.getElementById('editJadwalMulai').value,
+                jam_selesai: document.getElementById('editJadwalSelesai').value
+            };
+            
+            try {
+                await axios.put(`/admin/jadwal/${id}`, payload);
+                Swal.fire({ icon: 'success', title: 'Berhasil Diupdate', timer: 1500, showConfirmButton: false });
+                closeModalJadwal();
+                loadJadwalList();
+            } catch (e) {
+                Swal.fire('Error', e.response?.data?.detail || 'Gagal update jadwal', 'error');
+            }
+        }
+        async function deleteJadwal() {
+            const id = document.getElementById('editJadwalId').value;
+            await axios.delete(`/admin/jadwal/${id}`);
+            closeModalJadwal(); loadJadwalList();
+        }
+
+        // ============================================================================
+        // UNIFIED WIZARD: CREATE CLASS + ENROLL STUDENTS IN ONE FLOW
+        // ============================================================================
+
+        function openModalAddStudentClass() {
+            goToWizardStep1();
+            document.getElementById('wizardClassName').value = '';
+            document.getElementById('wizardStudentNims').value = '';
+            if (document.getElementById('wizardExcelFile')) document.getElementById('wizardExcelFile').value = '';
+            if (document.getElementById('wizardExcelLabel')) document.getElementById('wizardExcelLabel').innerText = 'Klik untuk upload Excel';
+            document.getElementById('modalAddStudentClass').classList.remove('hidden');
+        }
+
+        function closeModalAddStudentClass() {
+            document.getElementById('modalAddStudentClass').classList.add('hidden');
+        }
+
+        function goToWizardStep1() {
+            document.getElementById('wizardStep1').classList.remove('hidden');
+            document.getElementById('wizardStep2').classList.add('hidden');
+
+            // Update step 1 indicator (active)
+            document.getElementById('step1Indicator').className = 'w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold';
+            document.getElementById('step1Label').className = 'text-sm font-semibold text-indigo-600';
+
+            // Update step 2 indicator (inactive)
+            document.getElementById('step2Indicator').className = 'w-8 h-8 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-xs font-bold';
+            document.getElementById('step2Label').className = 'text-sm font-medium text-slate-400';
+            document.getElementById('stepConnector').className = 'w-12 h-0.5 bg-slate-200';
+        }
+
+        function goToWizardStep2() {
+            const className = document.getElementById('wizardClassName').value.trim();
+            if (!className) {
+                return Swal.fire('Error', 'Masukkan nama kelas terlebih dahulu', 'warning');
+            }
+
+            document.getElementById('wizardStep1').classList.add('hidden');
+            document.getElementById('wizardStep2').classList.remove('hidden');
+            document.getElementById('wizardClassNamePreview').innerText = className;
+
+            // Update step 1 (completed)
+            document.getElementById('step1Indicator').className = 'w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold';
+            document.getElementById('step1Label').className = 'text-sm font-semibold text-green-600';
+            document.getElementById('stepConnector').className = 'w-12 h-0.5 bg-green-200';
+
+            // Update step 2 (active)
+            document.getElementById('step2Indicator').className = 'w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold';
+            document.getElementById('step2Label').className = 'text-sm font-semibold text-indigo-600';
+
+            switchWizardEnrollTab('manual');
+            loadUnenrolledStudentsForWizard();
+        }
+
+        function switchWizardEnrollTab(tab) {
+            const tabManual = document.getElementById('wizardTabManual');
+            const tabExcel = document.getElementById('wizardTabExcel');
+            const formManual = document.getElementById('wizardFormManual');
+            const formExcel = document.getElementById('wizardFormExcel');
+
+            if (tab === 'manual') {
+                tabManual.className = 'flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600';
+                tabExcel.className = 'flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400';
+                formManual.classList.remove('hidden');
+                formExcel.classList.add('hidden');
+            } else {
+                tabExcel.className = 'flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600';
+                tabManual.className = 'flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400';
+                formExcel.classList.remove('hidden');
+                formManual.classList.add('hidden');
+            }
+        }
+
+        function previewWizardExcel(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('wizardExcelLabel').innerText = input.files[0].name;
+            }
+        }
+
+        async function skipStudentsAndCreate() {
+            const className = document.getElementById('wizardClassName').value.trim();
+
+            try {
+                const formData = new FormData();
+                formData.append('class_name', className);
+
+                await axios.post('/admin/student-class', formData);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Kelas Dibuat!',
+                    text: `Kelas ${className} berhasil dibuat (kosong)`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                closeModalAddStudentClass();
+                loadStudentClasses();
+            } catch (e) {
+                Swal.fire('Error', e.response?.data?.detail || 'Gagal membuat kelas', 'error');
+            }
+        }
+
+        async function createClassWithStudents() {
+            const className = document.getElementById('wizardClassName').value.trim();
+            const isManual = document.getElementById('wizardTabManual').classList.contains('text-indigo-600');
+
+            try {
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Membuat kelas dan mendaftarkan mahasiswa',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                // Step 1: Create class
+                const formData = new FormData();
+                formData.append('class_name', className);
+                const classRes = await axios.post('/admin/student-class', formData);
+                const classId = classRes.data.class_id;
+
+                // Step 2: Enroll students
+                let enrollRes;
+                if (isManual) {
+                    const selectedCheckboxes = document.querySelectorAll('.wizard-student-checkbox:checked');
+                    const nims = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+                    if (nims.length === 0) {
+                        Swal.close();
+                        return Swal.fire('Error', 'Pilih minimal satu mahasiswa', 'warning');
+                    }
+
+                    // Format payload sesuai backend: { kelas_id, nim_list }
+                    const payload = {
+                        kelas_id: parseInt(classId),
+                        nim_list: nims
+                    };
+                    
+                    console.log('Sending bulk enrollment:', payload);
+                    enrollRes = await axios.post('/admin/enrollment/bulk', payload);
+                } else {
+                    const file = document.getElementById('wizardExcelFile').files[0];
+                    if (!file) {
+                        return Swal.fire('Error', 'Pilih file Excel', 'warning');
+                    }
+
+                    const enrollFormData = new FormData();
+                    enrollFormData.append('student_class_id', classId);
+                    enrollFormData.append('file', file);
+
+                    enrollRes = await axios.post('/admin/enrollment/bulk-excel', enrollFormData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
+                    });
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Selesai!',
+                    html: `<p class="text-sm font-bold text-green-600 mb-2">✓ Kelas "${className}" berhasil dibuat</p>
+                           <p class="text-sm">${enrollRes.data.msg}</p>
+                           <p class="text-xs text-slate-500 mt-2">Berhasil: ${enrollRes.data.success} | Gagal: ${enrollRes.data.failed}</p>`,
+                    confirmButtonColor: '#4f46e5'
+                });
+
+                closeModalAddStudentClass();
+                loadStudentClasses();
+                switchEnrollmentTab('studentclass');
+            } catch (e) {
+                console.error('❌ ERROR DETAIL:');
+                console.error('Full error:', e);
+                console.error('Response:', e.response);
+                console.error('Response data:', e.response?.data);
+                console.error('Response status:', e.response?.status);
+                
+                let errorMsg = 'Gagal membuat kelas';
+                if (e.response?.data) {
+                    if (typeof e.response.data === 'object') {
+                        errorMsg = JSON.stringify(e.response.data, null, 2);
+                    } else {
+                        errorMsg = e.response.data;
+                    }
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error ' + (e.response?.status || ''),
+                    html: `<pre class="text-left text-xs bg-red-50 p-3 rounded">${errorMsg}</pre>`,
+                    width: 600
+                });
+            }
+        }
+
+        async function loadStudentClasses() {
+            try {
+                const res = await axios.get('/admin/student-class');
+                const tbody = document.getElementById('tableStudentClass');
+                if (!tbody) return;
+
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400 text-sm italic">Belum ada kelas mahasiswa</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = res.data.map(sc => `
+                <tr class="table-row-hover border-b border-slate-50">
+                    <td class="px-5 py-3 font-bold text-slate-800">${sc.class_name}</td>
+                    <td class="px-5 py-3 text-slate-500 text-sm">${sc.student_count || 0}</td>
+                    <td class="px-5 py-3 text-slate-400 text-xs">${new Date(sc.created_at).toLocaleDateString()}</td>
+                    <td class="px-5 py-3 text-right flex gap-2 justify-end">
+                        <button onclick="openEditStudentClass(${sc.class_id})" class="text-xs px-2 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded border border-indigo-200 font-semibold"><i class="fa-solid fa-pen mr-1"></i>Edit</button>
+                    </td>
+                </tr>
+                `).join('');
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'Gagal memuat data kelas', 'error');
+            }
+        }
+
+        async function deleteStudentClassFromEdit() {
+            try {
+                const classId = document.getElementById('editClassId').value;
+                const className = document.getElementById('editClassName').value;
+                
+                if (!classId || !className) {
+                    console.error('Class ID or Name not found');
+                    return;
+                }
+                
+                // Get enrolled student count from the tab header
+                const studentCountElement = document.getElementById('editClassStudentCount');
+                const studentCount = studentCountElement ? parseInt(studentCountElement.textContent) : 0;
+                
+                const result = await Swal.fire({
+                    title: `Hapus Kelas ${className}?`,
+                    html: `Kelas ini memiliki <strong>${studentCount} mahasiswa</strong> terdaftar.<br>Semua enrollment akan ikut terhapus.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Hapus Semua'
+                });
+
+                if (result.isConfirmed) {
+                    // Close modal immediately after confirmation
+                    closeModalEditStudentClass();
+                    
+                    try {
+                        await axios.delete(`/admin/student-class/${classId}?force=true`);
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Kelas Terhapus', 
+                            text: `Kelas ${className} dan ${studentCount} enrollment berhasil dihapus`,
+                            timer: 2000, 
+                            showConfirmButton: false 
+                        });
+                        await loadStudentClasses();
+                    } catch (e) {
+                        console.error('Delete class error:', e);
+                        console.error('Error response:', e.response?.data);
+                        console.error('Error status:', e.response?.status);
+                        const errorMsg = e.response?.data?.detail || 'Gagal menghapus kelas';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: `<pre class="text-left text-xs">${JSON.stringify(e.response?.data || errorMsg, null, 2)}</pre>`
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error('Error in deleteStudentClassFromEdit:', err);
+                Swal.fire('Error', 'Terjadi kesalahan saat menghapus kelas', 'error');
+            }
+        }
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+
+        // --- WIZARD CHECKLIST FUNCTIONS ---
+        async function loadUnenrolledStudentsForWizard() {
+            try {
+                // Get all users (sama seperti di loadAvailableStudentsForEdit)
+                const allMhs = await axios.get('/users/');
+                
+                // Get all enrollments untuk cek siapa yang sudah enrolled
+                const enrollRes = await axios.get('/admin/enrollment');
+                const enrolledNims = new Set(enrollRes.data.map(e => e.nim));
+                
+                // Filter mahasiswa yang belum enrolled
+                const unenrolled = allMhs.data.filter(m => !enrolledNims.has(m.nim));
+                
+                const container = document.getElementById('wizardStudentChecklistContainer');
+                
+                if (unenrolled.length === 0) {
+                    container.innerHTML = '<p class="text-center text-slate-400 text-sm py-4">Semua mahasiswa sudah terdaftar di kelas</p>';
+                } else {
+                    container.innerHTML = unenrolled.map(m => `
+                        <label class="flex items-center gap-3 py-2 px-3 bg-white rounded-lg border border-slate-200 mb-2 hover:border-indigo-300 transition cursor-pointer wizard-student-item" data-nim="${m.nim}" data-name="${m.name || m.nim}">
+                            <input type="checkbox" value="${m.nim}" 
+                                class="wizard-student-checkbox w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+                                onchange="updateWizardSelectedCount()">
+                            <div class="flex items-center gap-2 flex-1">
+                                <div class="w-7 h-7 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                    ${m.nim.split('.').pop().substring(0, 2)}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-800">${m.nim}</p>
+                                    <p class="text-xs text-slate-500">${m.name || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </label>
+                    `).join('');
+                }
+                
+                updateWizardSelectedCount();
+            } catch (err) {
+                console.error('Error loading students:', err);
+                document.getElementById('wizardStudentChecklistContainer').innerHTML = 
+                    '<p class="text-center text-red-500 text-sm py-4">Gagal memuat data mahasiswa</p>';
+            }
+        }
+
+        function filterWizardStudents() {
+            const search = document.getElementById('wizardSearchStudent').value.toLowerCase();
+            const items = document.querySelectorAll('.wizard-student-item');
+            items.forEach(item => {
+                const nim = item.getAttribute('data-nim').toLowerCase();
+                const name = item.getAttribute('data-name').toLowerCase();
+                item.style.display = (nim.includes(search) || name.includes(search)) ? '' : 'none';
+            });
+        }
+
+        function toggleSelectAllWizard() {
+            const checkboxes = document.querySelectorAll('.wizard-student-checkbox');
+            const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+                const item = cb.closest('.wizard-student-item');
+                return item && item.style.display !== 'none';
+            });
+            
+            const allChecked = visibleCheckboxes.every(cb => cb.checked);
+            
+            visibleCheckboxes.forEach(cb => {
+                cb.checked = !allChecked;
+            });
+            
+            document.getElementById('selectAllLabel').innerText = allChecked ? 'Pilih Semua' : 'Batalkan Semua';
+            updateWizardSelectedCount();
+        }
+
+        function updateWizardSelectedCount() {
+            const checked = document.querySelectorAll('.wizard-student-checkbox:checked').length;
+            document.getElementById('wizardSelectedCount').innerText = checked;
+            
+            const total = document.querySelectorAll('.wizard-student-checkbox').length;
+            const allChecked = checked === total && total > 0;
+            document.getElementById('selectAllLabel').innerText = allChecked ? 'Batalkan Semua' : 'Pilih Semua';
+        }
+
+        // --- EDIT STUDENT CLASS FUNCTIONS ---
+        async function openEditStudentClass(classId) {
+            try {
+                const res = await axios.get(`/admin/student-class/${classId}`);
+                document.getElementById('editClassId').value = res.data.class_id;
+                document.getElementById('editClassName').value = res.data.class_name;
+                
+                document.getElementById('modalEditStudentClass').classList.remove('hidden');
+                switchEditClassTab('enrolled');
+                
+                await loadEnrolledStudentsForEdit(classId);
+                await loadAvailableStudentsForEdit(classId);
+            } catch (e) {
+                Swal.fire('Error', 'Gagal memuat data kelas', 'error');
+            }
+        }
+
+        async function loadEnrolledStudentsForEdit(classId) {
+            try {
+                const res = await axios.get(`/admin/student-class/${classId}`);
+                const students = res.data.students || [];
+                document.getElementById('editClassStudentCount').innerText = students.length;
+                const listDiv = document.getElementById('editClassStudentList');
+                const noStudentsDiv = document.getElementById('editNoStudents');
+                
+                if (students.length === 0) {
+                    listDiv.innerHTML = '';
+                    noStudentsDiv.classList.remove('hidden');
+                } else {
+                    noStudentsDiv.classList.add('hidden');
+                    listDiv.innerHTML = students.map(s => `
+                        <div class="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-slate-200 hover:border-indigo-300 transition">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                    ${s.nim.split('.').pop().substring(0, 2)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-sm text-slate-800">${s.nim}</p>
+                                    <p class="text-xs text-slate-500">${s.nama || 'N/A'}</p>
+                                </div>
+                            </div>
+                            <button onclick="confirmRemoveStudentFromClass(${s.enrollment_id}, '${s.nim}')" 
+                                class="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-xs font-semibold border border-red-200 transition">
+                                <i class="fa-solid fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    `).join('');
+                }
+                
+                // Update main table count in real-time
+                loadStudentClasses();
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Gagal memuat data mahasiswa', 'error');
+            }
+        }
+
+        async function loadAvailableStudentsForEdit(classId) {
+            try {
+                // Get all mahasiswa
+                const allMhs = await axios.get('/users/');
+                
+                // Get ALL enrollments (dari semua kelas)
+                const allEnrollments = await axios.get('/admin/enrollment');
+                
+                // Get enrollments untuk kelas ini saja (untuk context)
+                const thisClassEnrolled = await axios.get(`/admin/student-class/${classId}`);
+                
+                // Buat Set NIM yang SUDAH PUNYA KELAS (di kelas manapun)
+                const enrolledNims = new Set(allEnrollments.data.map(e => e.nim));
+                
+                // Filter mahasiswa yang BELUM PUNYA KELAS sama sekali
+                const available = allMhs.data.filter(m => !enrolledNims.has(m.nim));
+                
+                console.log('=== ENROLLMENT DEBUG ===');
+                console.log('Total mahasiswa:', allMhs.data.length);
+                console.log('Total enrollment (semua kelas):', enrolledNims.size);
+                console.log('Enrolled di kelas ini:', thisClassEnrolled.data.students.length);
+                console.log('Mahasiswa tanpa kelas:', available.length);
+                console.log('Daftar mahasiswa tersedia:', available.map(m => `${m.nim} - ${m.nama}`));
+                
+                const listDiv = document.getElementById('editAvailableStudentsList');
+                if (available.length === 0) {
+                    listDiv.innerHTML = '<div class="text-center py-8"><div class="text-slate-400 mb-2"><i class="fa-solid fa-users-slash text-3xl"></i></div><p class="text-slate-500 font-medium">Semua mahasiswa sudah terdaftar di kelas</p><p class="text-slate-400 text-xs mt-1">Tidak ada mahasiswa yang bisa ditambahkan</p></div>';
+                } else {
+                    listDiv.innerHTML = available.map(m => `
+                        <div class="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-slate-200 mb-2 hover:border-teal-300 transition available-student" data-nim="${m.nim}" data-name="${m.nama || m.nim}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center text-xs font-bold">
+                                    ${m.nim.split('.').pop().substring(0, 2)}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-sm text-slate-800">${m.nim}</p>
+                                    <p class="text-xs text-slate-500">${m.nama || 'Mahasiswa'}</p>
+                                </div>
+                            </div>
+                            <button onclick="addSingleStudentToClass('${m.nim}')" 
+                                class="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-600 rounded text-xs font-semibold border border-teal-200 transition">
+                                <i class="fa-solid fa-plus mr-1"></i> Tambah
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Error loading available students:', err);
+                Swal.fire('Error', 'Gagal memuat daftar mahasiswa', 'error');
+            }
+        }
+
+        function closeModalEditStudentClass() {
+            document.getElementById('modalEditStudentClass').classList.add('hidden');
+            document.getElementById('editSearchStudent').value = '';
+            document.getElementById('editBulkNims').value = '';
+        }
+
+        function switchEditClassTab(tab) {
+            document.getElementById('editTabEnrolled').className = tab === 'enrolled' 
+                ? 'flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition'
+                : 'flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition';
+            document.getElementById('editTabAdd').className = tab === 'add'
+                ? 'flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 transition'
+                : 'flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition';
+            
+            document.getElementById('editContentEnrolled').classList.toggle('hidden', tab !== 'enrolled');
+            document.getElementById('editContentAdd').classList.toggle('hidden', tab !== 'add');
+        }
+
+        function switchEditAddMethod(method) {
+            document.getElementById('editAddTabSelect').className = method === 'select'
+                ? 'flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600'
+                : 'flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400';
+            document.getElementById('editAddTabBulk').className = method === 'bulk'
+                ? 'flex-1 pb-2 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600'
+                : 'flex-1 pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400';
+            
+            document.getElementById('editAddFormSelect').classList.toggle('hidden', method !== 'select');
+            document.getElementById('editAddFormBulk').classList.toggle('hidden', method !== 'bulk');
+        }
+
+        function filterAvailableStudents() {
+            const search = document.getElementById('editSearchStudent').value.toLowerCase();
+            const students = document.querySelectorAll('.available-student');
+            students.forEach(student => {
+                const nim = student.getAttribute('data-nim').toLowerCase();
+                const name = student.getAttribute('data-name').toLowerCase();
+                student.style.display = (nim.includes(search) || name.includes(search)) ? '' : 'none';
+            });
+        }
+
+        async function saveClassNameOnly() {
+            const classId = document.getElementById('editClassId').value;
+            const className = document.getElementById('editClassName').value.trim();
+            
+            if (!className) {
+                return Swal.fire('Error', 'Nama kelas tidak boleh kosong', 'warning');
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('class_name', className);
+                await axios.put(`/admin/student-class/${classId}`, formData);
+                
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Tersimpan!', 
+                    text: 'Nama kelas berhasil diperbarui',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500 
+                });
+                
+                // Auto-close modal and refresh main table
+                closeModalEditStudentClass();
+                loadStudentClasses();
+            } catch (e) {
+                Swal.fire('Error', e.response?.data?.detail || 'Gagal update kelas', 'error');
+            }
+        }
+
+        async function confirmRemoveStudentFromClass(enrollmentId, nim) {
+            const result = await Swal.fire({
+                title: 'Hapus Mahasiswa?',
+                html: `Mahasiswa <strong>${nim}</strong> akan dihapus dari kelas ini.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            });
+
+            if (result.isConfirmed) {
+                await removeStudentFromClass(enrollmentId);
+            }
+        }
+
+        async function removeStudentFromClass(enrollmentId) {
+            const classId = document.getElementById('editClassId').value;
+            try {
+                await axios.delete(`/admin/enrollment/${enrollmentId}`);
+                
+                // Instant feedback
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Dihapus!',
+                    text: 'Mahasiswa berhasil dihapus',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                
+                // Auto-refresh all related data in parallel
+                await Promise.all([
+                    loadEnrolledStudentsForEdit(classId),
+                    loadAvailableStudentsForEdit(classId)
+                ]);
+                loadEnrollments();
+            } catch (err) {
+                console.error(err);
+                const msg = err.response?.data?.detail || 'Gagal menghapus mahasiswa';
+                Swal.fire('Error', msg, 'error');
+            }
+        }
+
+        async function addSingleStudentToClass(nim) {
+            const classId = document.getElementById('editClassId').value;
+            try {
+                await axios.post('/admin/enrollment', {
+                    nim: nim,
+                    student_class_id: parseInt(classId)
+                });
+                
+                // Instant feedback
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Ditambahkan!',
+                    text: `${nim} berhasil ditambahkan`,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                
+                // Auto-refresh all related data in parallel
+                await Promise.all([
+                    loadEnrolledStudentsForEdit(classId),
+                    loadAvailableStudentsForEdit(classId)
+                ]);
+                loadEnrollments();
+            } catch (err) {
+                console.error(err);
+                const msg = err.response?.data?.detail || 'Gagal menambahkan mahasiswa';
+                Swal.fire('Error', msg, 'error');
+            }
+        }
+
+        async function bulkAddStudentsToClass() {
+            const classId = document.getElementById('editClassId').value;
+            const nimsText = document.getElementById('editBulkNims').value.trim();
+            
+            if (!nimsText) {
+                Swal.fire('Error', 'Masukkan daftar NIM', 'warning');
+                return;
+            }
+
+            const nims = nimsText.split('\n').map(n => n.trim()).filter(n => n);
+            if (nims.length === 0) {
+                Swal.fire('Error', 'Tidak ada NIM valid', 'warning');
+                return;
+            }
+
+            try {
+                // Show loading
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: `Menambahkan ${nims.length} mahasiswa`,
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                
+                const payload = nims.map(nim => ({ nim, student_class_id: parseInt(classId) }));
+                await axios.post('/admin/enrollment/bulk', payload);
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: `${nims.length} mahasiswa ditambahkan ke kelas`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                document.getElementById('editBulkNims').value = '';
+                
+                // Auto-refresh all related data in parallel
+                await Promise.all([
+                    loadEnrolledStudentsForEdit(classId),
+                    loadAvailableStudentsForEdit(classId)
+                ]);
+                loadEnrollments();
+            } catch (err) {
+                console.error(err);
+                const msg = err.response?.data?.detail || 'Gagal menambahkan mahasiswa';
+                Swal.fire('Error', msg, 'error');
+            }
+        }
+
+        // --- ENROLLMENT LOGIC RE-BINDING ---
+        // (Copied strictly from user's logic to maintain functionality)
+        function switchEnrollmentTab(tab) {
+            const tabStudentClass = document.getElementById('tabStudentClass');
+            const tabEnrollment = document.getElementById('tabEnrollment');
+            const contentStudentClass = document.getElementById('contentStudentClass');
+            const contentEnrollment = document.getElementById('contentEnrollment');
+
+            if (tab === 'studentclass') {
+                tabStudentClass.classList.replace('border-transparent', 'border-indigo-600');
+                tabStudentClass.classList.replace('text-slate-400', 'text-indigo-600');
+                tabEnrollment.classList.replace('border-indigo-600', 'border-transparent');
+                tabEnrollment.classList.replace('text-indigo-600', 'text-slate-400');
+                contentStudentClass.classList.remove('hidden');
+                contentEnrollment.classList.add('hidden');
+                loadStudentClasses();
+            } else {
+                tabEnrollment.classList.replace('border-transparent', 'border-indigo-600');
+                tabEnrollment.classList.replace('text-slate-400', 'text-indigo-600');
+                tabStudentClass.classList.replace('border-indigo-600', 'border-transparent');
+                tabStudentClass.classList.replace('text-indigo-600', 'text-slate-400');
+                contentEnrollment.classList.remove('hidden');
+                contentStudentClass.classList.add('hidden');
+                loadEnrollments();
+            }
+        }
+
+        function switchBulkTab(tab) {
+            const tabManual = document.getElementById('tabManual');
+            const tabExcel = document.getElementById('tabExcel');
+            const formManual = document.getElementById('formManualBulk');
+            const formExcel = document.getElementById('formExcelBulk');
+            if (tab === 'manual') {
+                tabManual.classList.replace('border-transparent', 'border-indigo-600');
+                tabManual.classList.replace('text-slate-400', 'text-indigo-600');
+                tabExcel.classList.replace('border-indigo-600', 'border-transparent');
+                tabExcel.classList.replace('text-indigo-600', 'text-slate-400');
+                formManual.classList.remove('hidden'); formExcel.classList.add('hidden');
+            } else {
+                tabExcel.classList.replace('border-transparent', 'border-indigo-600');
+                tabExcel.classList.replace('text-slate-400', 'text-indigo-600');
+                tabManual.classList.replace('border-indigo-600', 'border-transparent');
+                tabManual.classList.replace('text-indigo-600', 'text-slate-400');
+                formExcel.classList.remove('hidden'); formManual.classList.add('hidden');
+            }
+        }
+
+        async function createStudentClass(e) {
+            e.preventDefault();
+            const formData = new FormData(); formData.append('class_name', document.getElementById('studentClassName').value);
+            await axios.post('/admin/student-class', formData);
+            closeModalAddStudentClass(); loadStudentClasses();
+        }
+        async function deleteStudentClass(id, name) {
+            if ((await Swal.fire({ title: 'Hapus?', icon: 'warning', showCancelButton: true })).isConfirmed) {
+                await axios.delete(`/admin/student-class/${id}`); loadStudentClasses();
+            }
+        }
+
+        function openModalAddStudentClass() { document.getElementById('modalAddStudentClass').classList.remove('hidden'); }
+        function closeModalAddStudentClass() { document.getElementById('modalAddStudentClass').classList.add('hidden'); }
+        function openModalAddEnrollment() {
+            // Re-populate selects
+            axios.get('/users/').then(res => {
+                const s = document.getElementById('enrollmentNim'); s.innerHTML = "<option value=''>Pilih</option>";
+                res.data.forEach(m => s.innerHTML += `<option value="${m.nim}">${m.nama}</option>`);
+            });
+            axios.get('/admin/student-class').then(res => {
+                const s = document.getElementById('enrollmentStudentClass'); s.innerHTML = "<option value=''>Pilih</option>";
+                res.data.forEach(c => s.innerHTML += `<option value="${c.class_id}">${c.class_name}</option>`);
+            });
+            document.getElementById('modalAddEnrollment').classList.remove('hidden');
+        }
+        function closeModalAddEnrollment() { document.getElementById('modalAddEnrollment').classList.add('hidden'); }
+        async function createEnrollment(e) {
+            e.preventDefault();
+            await axios.post('/admin/enrollment', { nim: document.getElementById('enrollmentNim').value, student_class_id: parseInt(document.getElementById('enrollmentStudentClass').value) });
+            closeModalAddEnrollment(); loadEnrollments();
+        }
+
+        function openModalBulkEnrollment() {
+            axios.get('/admin/student-class').then(res => {
+                const s = document.getElementById('bulkEnrollmentStudentClass'); s.innerHTML = "<option value=''>Pilih Kelas</option>";
+                res.data.forEach(c => s.innerHTML += `<option value="${c.class_id}">${c.class_name}</option>`);
+            });
+            document.getElementById('modalBulkEnrollment').classList.remove('hidden');
+        }
+        function closeModalBulkEnrollment() { document.getElementById('modalBulkEnrollment').classList.add('hidden'); }
+
+        async function bulkEnrollManual(e) {
+            e.preventDefault();
+            const nims = document.getElementById('bulkEnrollmentNims').value.split('\n').map(n => n.trim()).filter(n => n);
+            await axios.post('/admin/enrollment/bulk', { student_class_id: parseInt(document.getElementById('bulkEnrollmentStudentClass').value), nim_list: nims });
+            closeModalBulkEnrollment(); loadEnrollments();
+        }
+        async function bulkEnrollExcel(e) {
+            e.preventDefault();
+            const fd = new FormData();
+            fd.append('student_class_id', document.getElementById('bulkEnrollmentStudentClass').value);
+            fd.append('file', document.getElementById('bulkEnrollmentFile').files[0]);
+            await axios.post('/admin/enrollment/bulk-excel', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+            closeModalBulkEnrollment(); loadEnrollments();
+        }
+
+        async function loadEnrollments() {
+            const filter = document.getElementById('filterKelas').value;
+            const url = filter ? `/admin/enrollment/kelas/${filter}` : '/admin/enrollment';
+            const res = await axios.get(url);
+            document.getElementById('countEnrollments').innerText = res.data.length;
+
+          
+            const tbody = document.getElementById('tableEnrollments');
+            if (res.data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-xs text-slate-400">Kosong</td></tr>'; return; }
+
+            tbody.innerHTML = res.data.map(e => `
+             <tr class="table-row-hover border-b border-slate-50 last:border-0">
+                 <td class="px-5 py-3 font-mono text-xs text-slate-600">${e.nim}</td>
+                 <td class="px-5 py-3 font-semibold text-slate-700">${e.nama}</td>
+                 <td class="px-5 py-3 text-indigo-600 text-xs font-bold">${e.class_name}</td>
+                 <td class="px-5 py-3 text-slate-400 text-xs">${new Date(e.enrolled_at).toLocaleDateString()}</td>
+                 <td class="px-5 py-3 text-right"><button onclick="deleteEnrollment(${e.enrollment_id})" class="text-xs text-red-400 hover:text-red-600"><i class="fa-solid fa-trash"></i></button></td>
+             </tr>`).join('');
+
+            // Populate Filter if empty
+            if (document.getElementById('filterKelas').options.length <= 1) {
+                const kres = await axios.get('/admin/student-class');
+                kres.data.forEach(k => document.getElementById('filterKelas').innerHTML += `<option value="${k.class_id}">${k.class_name}</option>`);
+                document.getElementById('countActiveClasses').innerText = kres.data.length;
+            }
+        }
+
+        async function deleteEnrollment(id) {
+            if ((await Swal.fire({ title: 'Hapus Enrollment?', icon: 'warning', showCancelButton: true })).isConfirmed) {
+                await axios.delete(`/admin/enrollment/${id}`); loadEnrollments();
+            }
+        }
+
+       
+        function downloadTemplateExcel(e) { e.preventDefault(); alert("Template Download Triggered"); }
+        function previewExcelFile(input) { if (input.files[0]) document.getElementById('excelFileLabel').innerText = input.files[0].name; }
+
+        // --- UPDATE PASSWORD ---
+        function openUpdatePasswordModal() {
+            document.getElementById('modalUpdatePassword').classList.remove('hidden');
+            document.getElementById('formUpdatePassword').reset();
+        }
+
+        async function updatePassword(e) {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validasi password baru
+            if (newPassword.length < 6) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Password baru minimal 6 karakter' });
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Konfirmasi password tidak cocok' });
+                return;
+            }
+
+            try {
+                Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
+                
+                const response = await axios.post('/user/update-password', {
+                    old_password: oldPassword,
+                    new_password: newPassword
+                }, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Password berhasil diperbarui',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                
+                document.getElementById('modalUpdatePassword').classList.add('hidden');
+                document.getElementById('formUpdatePassword').reset();
+            } catch (error) {
+                let errorMsg = 'Gagal memperbarui password';
+                if (error.response?.data?.detail) {
+                    errorMsg = error.response.data.detail;
+                }
+                Swal.fire({ icon: 'error', title: 'Error', text: errorMsg });
+            }
+        }
+    </script>
+
+    <!-- Modal Update Password -->
+    <div id="modalUpdatePassword" class="hidden fixed inset-0 z-50 overflow-y-auto modal-overlay flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate__animated animate__fadeInUp animate__faster">
+            <button onclick="document.getElementById('modalUpdatePassword').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-key text-2xl text-indigo-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Ubah Password</h2>
+                <p class="text-sm text-slate-500">Masukkan password lama dan password baru Anda</p>
+            </div>
+
+            <form id="formUpdatePassword" onsubmit="updatePassword(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Password Lama</label>
+                    <input type="password" id="oldPassword" required
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Password Baru</label>
+                    <input type="password" id="newPassword" required minlength="6"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <p class="text-xs text-slate-500 mt-1">Minimal 6 karakter</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Konfirmasi Password Baru</label>
+                    <input type="password" id="confirmPassword" required minlength="6"
+                        class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg transition shadow-lg shadow-indigo-200 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> Update Password
+                </button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>
